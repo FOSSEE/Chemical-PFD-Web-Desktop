@@ -38,8 +38,8 @@ QWidget#bgwidget[theme="dark"] {
     background-color: qlineargradient(spread:pad,
                                       x1:0, y1:0,
                                       x2:1, y2:1,
-                                      stop:0 #8B5E3C,
-                                      stop:1 #F5F1E6);
+                                      stop:0 #0f172a,
+                                      stop:1 #1e293b);
 }
 
 QWidget#bgwidget QLabel {
@@ -49,7 +49,7 @@ QWidget#bgwidget[theme="light"] QLabel {
     color: #3A2A20;
 }
 QWidget#bgwidget[theme="dark"] QLabel {
-    color: #F5F1E6;
+    color: #e2e8f0;
 }
 
 QWidget#bgwidget QLabel#label {
@@ -93,47 +93,32 @@ QWidget#bgwidget[theme="dark"] QPushButton {
     background-color: qlineargradient(spread:pad,
                                       x1:0, y1:0,
                                       x2:1, y2:0,
-                                      stop:0 #8B5E3C,
-                                      stop:1 #F5F1E6);
-    color: #8B5E3C;
+                                      stop:0 #3b82f6,
+                                      stop:1 #2563eb);
+    color: #FFFFFF;
 }
 QWidget#bgwidget[theme="dark"] QPushButton:hover {
     background-color: qlineargradient(spread:pad,
                                       x1:0, y1:0,
                                       x2:1, y2:0,
-                                      stop:0 #9C6B45,
-                                      stop:1 #F5F1E6);
+                                      stop:0 #60a5fa,
+                                      stop:1 #3b82f6);
 }
 QWidget#bgwidget[theme="dark"] QPushButton:pressed {
     background-color: qlineargradient(spread:pad,
                                       x1:0, y1:0,
                                       x2:1, y2:0,
-                                      stop:0 #754B30,
-                                      stop:1 #E4D7C1);
+                                      stop:0 #1d4ed8,
+                                      stop:1 #1e40af);
 }
 
 QWidget#bgwidget QPushButton#themeToggle {
-    font: 12pt "Segoe UI";
-    padding: 6px 12px;
-    border-radius: 14px;
-    border: 1px solid #8B5E3C;
+    background-color: transparent;
+    border: none;
+    border-radius: 25px;
 }
-
-QWidget#bgwidget[theme="light"] QPushButton#themeToggle {
-    color: #8B5E3C;
-    background-color: rgba(255, 255, 255, 150);
-}
-QWidget#bgwidget[theme="light"] QPushButton#themeToggle:hover {
-    background-color: rgba(255, 255, 255, 200);
-}
-
-QWidget#bgwidget[theme="dark"] QPushButton#themeToggle {
-    color: #F5F1E6;
-    border: 1px solid #F5F1E6;
-    background-color: rgba(0, 0, 0, 40);
-}
-QWidget#bgwidget[theme="dark"] QPushButton#themeToggle:hover {
-    background-color: rgba(0, 0, 0, 80);
+QWidget#bgwidget QPushButton#themeToggle:hover {
+    background-color: rgba(128, 128, 128, 0.2);
 }
     </string>
    </property>
@@ -208,14 +193,14 @@ QWidget#bgwidget[theme="dark"] QPushButton#themeToggle:hover {
    <widget class="QPushButton" name="themeToggle">
     <property name="geometry">
      <rect>
-      <x>950</x>
+      <x>1100</x>
       <y>40</y>
-      <width>200</width>
-      <height>40</height>
+      <width>50</width>
+      <height>50</height>
      </rect>
     </property>
     <property name="text">
-     <string>Toggle theme</string>
+     <string/>
     </property>
    </widget>
 
