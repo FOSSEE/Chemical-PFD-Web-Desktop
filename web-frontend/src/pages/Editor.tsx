@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Tooltip } from "@heroui/react";
-import { Input, Badge } from "@heroui/react";
-import { SearchIcon, FilterIcon } from "@/components/icons";
-import { componentsConfig } from "@/assets/config/items";
+import { SearchIcon } from "@/components/icons";
+import { ComponentsConfig, componentsConfig } from "@/assets/config/items";
 import { ThemeSwitch } from "@/components/theme-switch";
 
 interface ComponentItem {
@@ -12,7 +11,7 @@ interface ComponentItem {
   svg: string;
   class: string;
   object: string;
-  args: any[];
+  args: readonly any[];
 }
 
 interface CanvasItem extends ComponentItem {
@@ -26,7 +25,7 @@ interface CanvasItem extends ComponentItem {
 export default function Editor() {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const [components, setComponents] = useState<Record<string, Record<string, ComponentItem>>>({});
+  const [components, setComponents] = useState<ComponentsConfig>(componentsConfig);
   const [droppedItems, setDroppedItems] = useState<CanvasItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,8 +34,8 @@ export default function Editor() {
     setComponents(componentsConfig);
   }, []);
 
-  const filteredComponents = Object.keys(components).reduce((result, category) => {
-    const items = components[category];
+  const filteredComponents = Object.keys(components).reduce<Record<string, ComponentItem[]>>((result, category) => {
+    const items = components[category as keyof ComponentsConfig] as Record<string, ComponentItem>;
     const matched = Object.keys(items).filter((key) =>
       items[key].name.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -46,7 +45,7 @@ export default function Editor() {
     }
 
     return result;
-  }, {} as Record<string, ComponentItem[]>);
+  }, {});
 
   const handleDragStart = (e: React.DragEvent, item: ComponentItem) => {
     e.dataTransfer.setData("component", JSON.stringify(item));
@@ -195,7 +194,7 @@ export default function Editor() {
               <h3 className="font-bold text-sm flex items-center gap-2 text-gray-800 dark:text-gray-200">
                 Components Library
                 <span className="text-xs font-normal text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                  {Object.keys(components).reduce((acc, cat) => acc + Object.keys(components[cat]).length, 0)} items
+                  {Object.keys(components).reduce((acc, cat) => acc + Object.keys(components[cat as keyof ComponentsConfig] as Record<string, ComponentItem>).length, 0)} items
                 </span>
               </h3>
             </div>
@@ -235,7 +234,7 @@ export default function Editor() {
       <div className="px-4 mb-2 flex items-center justify-between group">
         <h4 className="font-semibold text-sm text-gray-700 dark:text-gray-300">{category}</h4>
         <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
-          {Object.keys(components[category]).length}
+          {Object.keys(components[category as keyof ComponentsConfig] as Record<string, ComponentItem>).length}
         </span>
       </div>
       <div className="px-2">

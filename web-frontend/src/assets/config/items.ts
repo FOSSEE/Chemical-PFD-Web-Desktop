@@ -114,6 +114,15 @@ import RollerCrusherSVG from "@/assets/svg/Size Reduction Equipements/Roller Cru
 import GeneralSymbolIcon from "@/assets/toolbar/Feeders/General Symbol.png";
 import GeneralSymbolSVG from "@/assets/svg/Feeders/General Symbol.svg";
 
+export interface componentConfigEntry {
+  name: string;
+  icon: any;
+  svg: any;
+  class: string;
+  object: string;
+  args: any[];
+}
+
 export const componentsConfig = {
   Compressors: {
     "Centrifugal Compressor": {
@@ -462,3 +471,5 @@ export const componentsConfig = {
     }
   }
 } as const;
+
+export type ComponentsConfig = typeof componentsConfig;
