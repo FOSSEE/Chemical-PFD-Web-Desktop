@@ -200,7 +200,7 @@ http://127.0.0.1:8000/api/
 
 ## 3. Components
 
-### 3.1 Import 
+### 3.1 Import
 
 1. First create a superuser
 
@@ -209,9 +209,9 @@ python manage.py createsuperuser
 ```
 
 2. Login with superuser in admin dashboard (baseurl\admin\)
-   
+
 3. Proceed to components list click import zip and import the components zip ( Components zip must follow this folder structure)
-   
+
    ```json
    components
    - components.csv
@@ -230,35 +230,36 @@ python manage.py createsuperuser
 * **Response Example (Success):**
 
 ```json
-[
-      {
-        "id": 1344,
-        "svg_url": null,
-        "png_url": null,
-        "s_no": "203",
-        "parent": "Process Quantities",
-        "name": "Pressure and Temperature",
-        "legend": "",
-        "suffix": "",
-        "object": "PressureAndTemperature",
-        "svg": null,
-        "png": null,
-        "grips": ""
-    },
-    {
-        "id": 1345,
-        "svg_url": "http://127.0.0.1:8000/media/components/Inflow_Line_wPTKkEg.svg",
-        "png_url": "http://127.0.0.1:8000/media/components/Inflow_Line_e9o9LWU.png",
-        "s_no": "301",
-        "parent": "Piping",
-        "name": "Inflow Line",
-        "legend": "",
-        "suffix": "",
-        "object": "InflowLine",
-        "svg": "http://127.0.0.1:8000/media/components/Inflow_Line_wPTKkEg.svg",
-        "png": "http://127.0.0.1:8000/media/components/Inflow_Line_e9o9LWU.png",
-        "grips": ""
-    },
+{
+    "components": [
+        {
+            "id": 1341,
+            "svg_url": null,
+            "png_url": null,
+            "s_no": "101",
+            "parent": "General",
+            "name": "Insulation/Tracing",
+            "legend": "",
+            "suffix": "",
+            "object": "Insulation",
+            "svg": null,
+            "png": null,
+            "grips": ""
+        },
+       {
+            "id": 1345,
+            "svg_url": "http://127.0.0.1:8000/media/components/Inflow_Line_wPTKkEg.svg",
+            "png_url": "http://127.0.0.1:8000/media/components/Inflow_Line_e9o9LWU.png",
+            "s_no": "301",
+            "parent": "Piping",
+            "name": "Inflow Line",
+            "legend": "",
+            "suffix": "",
+            "object": "InflowLine",
+            "svg": "http://127.0.0.1:8000/media/components/Inflow_Line_wPTKkEg.svg",
+            "png": "http://127.0.0.1:8000/media/components/Inflow_Line_e9o9LWU.png",
+            "grips": ""
+        },
 ]
 ```
 

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 
-from .models import Component
-from .serializers import ComponentSerializer
+from .models import Component, Project, ProjectComponent
+from .serializers import ComponentSerializer, ProjectSerializer, ProjectComponentSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.decorators import api_view, permission_classes
@@ -13,6 +13,8 @@ from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework.permissions import AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -52,22 +54,29 @@ class LoginView(TokenObtainPairView):
 
 class MyTokenRefreshView(TokenRefreshView):
     permission_classes = [AllowAny]
-
-
-class ComponentListView(generics.ListAPIView):
-
+class ComponentListView(generics.ListCreateAPIView):
     queryset = Component.objects.all()
     serializer_class = ComponentSerializer
-    permission_classes = [AllowAny] 
+    permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
 
-    
     ordering_fields = ['s_no', 'name', 'legend']
-    ordering = ['s_no']  
-    
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        
-        return queryset
+    ordering = ['s_no']
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({"components": serializer.data}, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        component = serializer.save()
+
+        return Response(
+            {"component": serializer.data},
+            status=status.HTTP_201_CREATED
+        )
 
 class ComponentDetailView(generics.RetrieveAPIView):
     queryset = Component.objects.all()
@@ -75,8 +84,76 @@ class ComponentDetailView(generics.RetrieveAPIView):
     permission_classes = [AllowAny]
     lookup_field = 'id'
 
+
 class ComponentByNameView(generics.RetrieveAPIView):
     queryset = Component.objects.all()
     serializer_class = ComponentSerializer
     permission_classes = [AllowAny]
     lookup_field = 'name'
+
+class ProjectListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProjectSerializer
+
+    def get_queryset(self):
+        return Project.objects.filter(user=self.request.user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            "status": "success",
+            "projects": serializer.data
+        }, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        project = serializer.save(user=request.user)
+        return Response({
+            "message": "Project created",
+            "project": self.get_serializer(project).data
+        }, status=status.HTTP_201_CREATED)
+
+class ProjectDetailView(generics.RetrieveUpdateAPIView):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        return Project.objects.filter(user=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        project = self.get_object()
+        serializer = self.get_serializer(project)
+
+        project_components = ProjectComponent.objects.filter(
+            project=project
+        ).select_related("component")
+
+        pc_serializer = ProjectComponentSerializer(project_components, many=True)
+
+        return Response({
+            "status": "success",
+            "project": {
+                "details": serializer.data,
+                "components": pc_serializer.data
+            }
+        }, status=status.HTTP_200_OK)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False) 
+        project = self.get_object()
+
+        serializer = self.get_serializer(
+            project, data=request.data, partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response({
+            "status": "success",
+            "message": "Project updated successfully",
+            "project": serializer.data
+        }, status=status.HTTP_200_OK)

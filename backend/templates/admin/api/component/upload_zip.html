@@ -1,0 +1,13 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h2>Upload Components ZIP</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="zip_file" accept=".zip" required>
+    <button type="submit" class="default">Upload</button>
+</form>
+
+<a href="{% url 'admin:api_component_changelist' %}">Back</a>
+{% endblock %}

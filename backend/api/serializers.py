@@ -1,8 +1,13 @@
 from rest_framework import serializers
-from .models import Component
+from .models import Component, Project, ProjectComponent
 
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = '__all__'  
 class ComponentSerializer(serializers.ModelSerializer):
-    # If you want to include full URLs for the images
     svg_url = serializers.SerializerMethodField()
     png_url = serializers.SerializerMethodField()
     
@@ -26,3 +31,9 @@ class ComponentSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.png.url)
             return obj.png.url
         return None
+    
+class ProjectComponentSerializer(serializers.ModelSerializer):
+    component = ComponentSerializer(read_only=True)
+    class Meta:
+        model = ProjectComponent
+        fields = [ "component", "component_unique_id", "connections"]
