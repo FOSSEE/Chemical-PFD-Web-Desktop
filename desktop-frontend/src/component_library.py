@@ -73,7 +73,7 @@ class ComponentLibrary(QDockWidget):
         self._load_components()
         self._populate_icons()
         
-        self.setFixedWidth(400)
+        self.setMinimumWidth(400)
     
     def _setup_ui(self):
         main_widget = QWidget()

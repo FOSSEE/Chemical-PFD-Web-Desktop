@@ -399,6 +399,21 @@ QWidget#bgwidget QPushButton#themeToggle:hover {
      </property>
     </widget>
 
+    <!-- THEME TOGGLE BUTTON -->
+    <widget class="QPushButton" name="themeToggle">
+     <property name="geometry">
+      <rect>
+       <x>1100</x>
+       <y>40</y>
+       <width>50</width>
+       <height>50</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+
   </widget>
  </widget>
  <resources/>
