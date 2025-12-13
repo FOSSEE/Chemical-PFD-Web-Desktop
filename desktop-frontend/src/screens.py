@@ -1,5 +1,3 @@
-# import sqlite3
-
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog
@@ -9,8 +7,6 @@ from src.theme import apply_theme_to_screen, apply_theme_to_all
 from src.navigation import slide_to_index
 from src.toast import show_toast
 from src.api_client import login as api_login, register as api_register, ApiError
-
-# import requests
 
 class WelcomeScreen(QDialog):
     def __init__(self):
@@ -169,8 +165,8 @@ class LoginScreen(QDialog):
         print("Successfully logged in via backend.")
         show_toast("Logged in successfully!")
 
-        # Later you can slide to a Home/Dashboard screen
-        # slide_to_index(3, direction=1)
+        # Canvas screen
+        slide_to_index(3, direction=1)
 
 
 class CreateAccScreen(QDialog):
