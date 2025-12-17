@@ -15,10 +15,10 @@ class ComponentButton(QToolButton):
         
         if os.path.exists(icon_path):
             self.setIcon(QIcon(icon_path))
-            self.setIconSize(QSize(48, 48))
+            self.setIconSize(QSize(42, 42))
         
         self.setToolTip(component_data['name'])
-        self.setFixedSize(60, 60)
+        self.setFixedSize(56, 56)
         self.setStyleSheet("""
             QToolButton {
                 border: 1px solid #ccc;
@@ -60,10 +60,18 @@ class ComponentButton(QToolButton):
 
 class ComponentLibrary(QDockWidget):
     def __init__(self, parent=None):
-        super(ComponentLibrary, self).__init__("Component Library", parent)
+        super(ComponentLibrary, self).__init__("Components", parent)
         
-        self.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+        self.setFeatures(
+            QDockWidget.DockWidgetFloatable |
+            QDockWidget.DockWidgetMovable |
+            QDockWidget.DockWidgetClosable
+        )
         self.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+
+        # 🔥 reduce width so canvas gets more space
+        self.setMinimumWidth(260)
+        self.setMaximumWidth(260)
         
         self.component_data = []
         self.icon_buttons = []
@@ -72,9 +80,8 @@ class ComponentLibrary(QDockWidget):
         self._setup_ui()
         self._load_components()
         self._populate_icons()
-        
-        self.setMinimumWidth(400)
     
+
     def _setup_ui(self):
         main_widget = QWidget()
         main_layout = QVBoxLayout(main_widget)
@@ -99,7 +106,8 @@ class ComponentLibrary(QDockWidget):
         main_layout.addWidget(self.scroll_area)
         
         self.setWidget(main_widget)
-    
+
+
     def _load_components(self):
         csv_path = os.path.join("ui", "assets", "Component_Details.csv")
         
@@ -118,12 +126,13 @@ class ComponentLibrary(QDockWidget):
                         })
         except Exception as e:
             print(f"Error loading components: {e}")
-    
+
+
     def _populate_icons(self):
         for i in reversed(range(self.scroll_layout.count())):
-            widget = self.scroll_layout.itemAt(i).widget()
-            if widget:
-                widget.deleteLater()
+            w = self.scroll_layout.itemAt(i).widget()
+            if w:
+                w.deleteLater()
         
         self.icon_buttons.clear()
         self.category_widgets.clear()

@@ -25,9 +25,20 @@ class WelcomeScreen(QDialog):
         self.center_content()
 
     def gotologin(self):
+        import src.app_state as app_state
+        
+        # Reset tokens & fields before entering LoginScreen
+        login_screen = app_state.screens["login"]
+        login_screen.reset_state()
+
         slide_to_index(1, direction=1)
 
     def gotocreate(self):
+        import src.app_state as app_state
+        
+        create_screen = app_state.screens["create"]
+        create_screen.reset_state()      # clear form + tokens
+
         slide_to_index(2, direction=1)
 
     def toggle_theme(self):
@@ -162,6 +173,17 @@ class LoginScreen(QDialog):
         geo.moveLeft(self.width() - geo.width() - margin_right)
         btn.setGeometry(geo)
 
+    def reset_state(self):
+        import src.app_state as app_state
+        app_state.access_token = None
+        app_state.refresh_token = None
+        app_state.current_user = None
+
+        self.emailfield.clear()
+        self.passwordfield.clear()
+        self.error.setText("")
+
+
 
     def loginfunction(self):
         user = self.emailfield.text().strip()
@@ -213,7 +235,13 @@ class CreateAccScreen(QDialog):
         self.center_content()
 
     def gotologin(self):
-        slide_to_index(1, direction=-1)
+        import src.app_state as app_state
+        
+        # Reset tokens & fields before entering LoginScreen
+        login_screen = app_state.screens["login"]
+        login_screen.reset_state()
+
+        slide_to_index(1, direction=1)
 
     def toggle_theme(self):
         new_theme = "dark" if app_state.current_theme == "light" else "light"
@@ -293,6 +321,17 @@ class CreateAccScreen(QDialog):
         margin_right = 40
         geo.moveLeft(self.width() - geo.width() - margin_right)
         btn.setGeometry(geo)
+
+    def reset_state(self):
+        import src.app_state as app_state
+        app_state.access_token = None
+        app_state.refresh_token = None
+        app_state.current_user = None
+
+        self.emailfield.clear()
+        self.passwordfield.clear()
+        self.confirmpasswordfield.clear()
+        self.error.setText("")
 
     def signupfunction(self):
         # Treat this as email input

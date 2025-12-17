@@ -40,4 +40,7 @@ def apply_theme_to_all(theme):
         apply_theme_to_screen(s, theme)
         if hasattr(s, "update_theme_button"):
             s.update_theme_button()
+        if hasattr(s, "canvas"):
+            s.canvas.update_canvas_theme()
+
 

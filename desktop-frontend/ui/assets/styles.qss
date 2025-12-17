@@ -3,194 +3,283 @@ QWidget {
     font-family: "Segoe UI", sans-serif;
 }
 
-/* Background */
-QWidget#bgwidget {
-    background-color: #ffffff;
+QWidget#bgwidget[theme="light"] {
+    background-color: qlineargradient(
+        x1:0, y1:0,
+        x2:1, y2:1,
+        stop:0 #DCC7AA,
+        stop:1 #FFFFFF
+    );
 }
 
-/* Landing Page Styles */
+QWidget#bgwidget[theme="dark"] {
+    background-color: qlineargradient(
+        x1:0, y1:0,
+        x2:1, y2:1,
+        stop:0 #0f172a,
+        stop:1 #1e293b
+    );
+}
+
+/* ============================================================
+   TEXT COLORS
+   ============================================================ */
+
+QWidget#bgwidget[theme="light"] QLabel {
+    color: #3A2A20;
+}
+
+QWidget#bgwidget[theme="dark"] QLabel {
+    color: #e2e8f0;
+}
+
+/* Header / Titles */
 QLabel#headerLabel {
     font-size: 32px;
     font-weight: bold;
-    color: #333333;
 }
 
 QLabel#subtitleLabel {
     font-size: 16px;
-    color: #666666;
 }
 
 QLabel#sectionHeader {
     font-size: 18px;
     font-weight: 600;
-    color: #333333;
     margin-bottom: 5px;
 }
 
-/* Action Card Styles */
-QFrame#actionCard {
-    background-color: #f8f9fa;
-    border: 1px solid #e1e4e8;
-    border-radius: 8px;
-}
-
-QFrame#actionCard:hover {
-    background-color: #ffffff;
-    border: 1px solid #0366d6;
-}
-
-QLabel#cardIcon {
-    font-size: 48px;
-    color: #0366d6;
-}
-
-QLabel#cardTitle {
-    font-size: 16px;
-    font-weight: bold;
-    color: #24292e;
-}
-
-QLabel#cardDesc {
-    font-size: 13px;
-    color: #586069;
-}
-
-/* Recent Project Item Styles */
-QWidget#recentContainer {
-    background-color: #ffffff;
-    border: 1px solid #e1e4e8;
-    border-radius: 6px;
-}
-
-QLabel#recentIcon {
-    font-size: 20px;
-}
-
-QLabel#recentName {
-    font-size: 14px;
-    font-weight: 600;
-    color: #24292e;
-}
-
-QLabel#recentTime {
-    font-size: 12px;
-    color: #586069;
-}
-
-QLabel#recentArrow {
-    font-size: 16px;
-    color: #d1d5da;
-    font-weight: bold;
-}
-
-RecentProjectItem:hover {
-    background-color: #f6f8fa;
-    border-radius: 6px;
-}
-
-RecentProjectItem:hover QLabel#recentName {
-    color: #0366d6;
-}
-
-RecentProjectItem:hover QLabel#recentArrow {
-    color: #0366d6;
-}
-
-QFrame#divider {
-    color: #e1e4e8;
-}
-
 /* ============================================================
-   DARK THEME OVERRIDES
-   Applied when widget property theme="dark"
+   ACTION CARDS
    ============================================================ */
 
-/* Background */
-QWidget#bgwidget[theme="dark"] {
-    background-color: #1e1e1e;
+QFrame#actionCard {
+    border-radius: 12px;
+    padding: 16px;
 }
 
-/* Landing Page Styles */
-QWidget[theme="dark"] QLabel#headerLabel {
-    color: #cccccc;
+/* Light Theme */
+QWidget[theme="light"] QFrame#actionCard {
+    background-color: #f4e8dc;
+    border: 1px solid #C97B5A;
 }
 
-QWidget[theme="dark"] QLabel#subtitleLabel {
-    color: #858585;
+QWidget[theme="light"] QFrame#actionCard:hover {
+    background-color: #ffffff;
+    border: 1px solid #B06345;
 }
 
-QWidget[theme="dark"] QLabel#sectionHeader {
-    color: #cccccc;
-}
-
-/* Action Card Styles */
+/* Dark Theme */
 QWidget[theme="dark"] QFrame#actionCard {
-    background-color: #252526;
-    border: 1px solid #3e3e42;
+    background-color: #1e293b;
+    border: 1px solid #334155;
 }
 
 QWidget[theme="dark"] QFrame#actionCard:hover {
-    background-color: #2d2d30;
-    border: 1px solid #007acc;
+    background-color: #2d3b52;
+    border: 1px solid #3b82f6;
+}
+
+/* Icons & Text */
+QLabel#cardIcon {
+    font-size: 48px;
+}
+
+QWidget[theme="light"] QLabel#cardIcon {
+    color: #B06345;
 }
 
 QWidget[theme="dark"] QLabel#cardIcon {
-    color: #007acc;
+    color: #3b82f6;
+}
+
+QWidget[theme="light"] QLabel#cardTitle {
+    color: #3A2A20;
 }
 
 QWidget[theme="dark"] QLabel#cardTitle {
-    color: #cccccc;
+    color: #e2e8f0;
+}
+
+QWidget[theme="light"] QLabel#cardDesc {
+    color: #7c5a45;
 }
 
 QWidget[theme="dark"] QLabel#cardDesc {
-    color: #858585;
+    color: #94a3b8;
 }
 
-/* Recent Project Item Styles */
+/* ============================================================
+   RECENT PROJECT ITEMS
+   ============================================================ */
+
+QWidget#recentContainer {
+    border-radius: 6px;
+    padding: 10px;
+}
+
+/* LIGHT */
+QWidget[theme="light"] QWidget#recentContainer {
+    background-color: #ffffff;
+    border: 1px solid #C97B5A;
+}
+
+QWidget[theme="light"] QWidget#recentContainer:hover {
+    background-color: #f4e8dc;
+}
+
+/* DARK */
 QWidget[theme="dark"] QWidget#recentContainer {
-    background-color: #252526;
-    border: 1px solid #3e3e42;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+}
+
+QWidget[theme="dark"] QWidget#recentContainer:hover {
+    background-color: #2a3448;
+}
+
+/* icon */
+QWidget[theme="light"] QLabel#recentIcon {
+    color: #3A2A20;
 }
 
 QWidget[theme="dark"] QLabel#recentIcon {
-    color: #cccccc;
+    color: #e2e8f0;
+}
+
+/* name */
+QWidget[theme="light"] QLabel#recentName {
+    color: #3A2A20;
 }
 
 QWidget[theme="dark"] QLabel#recentName {
-    color: #cccccc;
+    color: #e2e8f0;
+}
+
+/* time */
+QWidget[theme="light"] QLabel#recentTime {
+    color: #7c5a45;
 }
 
 QWidget[theme="dark"] QLabel#recentTime {
-    color: #858585;
+    color: #94a3b8;
+}
+
+/* Arrow */
+QWidget[theme="light"] QLabel#recentArrow {
+    color: #C97B5A;
 }
 
 QWidget[theme="dark"] QLabel#recentArrow {
-    color: #505050;
+    color: #64748b;
 }
 
-QWidget[theme="dark"] RecentProjectItem:hover {
-    background-color: #2a2d2e;
+/* Hover */
+RecentProjectItem:hover QLabel#recentName {
+    color: #B06345;
 }
 
 QWidget[theme="dark"] RecentProjectItem:hover QLabel#recentName {
-    color: #007acc;
+    color: #3b82f6;
 }
 
-QWidget[theme="dark"] RecentProjectItem:hover QLabel#recentArrow {
-    color: #007acc;
+/* ============================================================
+   DIVIDERS
+   ============================================================ */
+
+QFrame#divider {
+    height: 1px;
+}
+
+QWidget[theme="light"] QFrame#divider {
+    background-color: #C97B5A;
 }
 
 QWidget[theme="dark"] QFrame#divider {
-    color: #3e3e42;
+    background-color: #334155;
 }
 
-/* Theme Toggle Button */
+/* ============================================================
+   THEME TOGGLE BUTTON
+   ============================================================ */
+
 QPushButton#themeToggle {
     background-color: transparent;
     border: none;
-    border-radius: 4px;
+    border-radius: 14px;
 }
 
 QPushButton#themeToggle:hover {
     background-color: rgba(128, 128, 128, 0.2);
+}
+
+/* ============================================================
+   LOGOUT BUTTON
+   ============================================================ */
+
+QPushButton#logoutButton {
+    font-size: 13px;
+    padding: 8px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+/* ------------ LIGHT MODE ------------ */
+QWidget[theme="light"] QPushButton#logoutButton {
+    color: #3A2A20;
+    background-color: #f4e8dc;
+    border: 1px solid #C97B5A;
+}
+
+QWidget[theme="light"] QPushButton#logoutButton:hover {
+    background-color: #ffffff;
+    border-color: #B06345;
+}
+
+QWidget[theme="light"] QPushButton#logoutButton:pressed {
+    background-color: #e8d5c4;
+    border-color: #A45535;
+}
+
+/* ------------ DARK MODE ------------ */
+QWidget[theme="dark"] QPushButton#logoutButton {
+    color: #e2e8f0;
+    background-color: #1e293b;
+    border: 1px solid #334155;
+}
+
+QWidget[theme="dark"] QPushButton#logoutButton:hover {
+    background-color: #2d3b52;
+    border-color: #3b82f6;
+}
+
+QWidget[theme="dark"] QPushButton#logoutButton:pressed {
+    background-color: #162032;
+    border-color: #2563eb;
+}
+
+
+QWidget#editorHeader {
+    background: #2a2a2a;
+    border-bottom: 1px solid #444;
+}
+
+QLabel#editorTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+}
+
+QPushButton#backButton, QPushButton#headerLogout {
+    padding: 6px 14px;
+    border-radius: 6px;
+    background: #444;
+    color: white;
+    border: 1px solid #666;
+}
+
+QPushButton#backButton:hover,
+QPushButton#headerLogout:hover {
+    background: #555;
 }

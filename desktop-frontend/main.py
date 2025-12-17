@@ -43,6 +43,14 @@ def main():
     landing = LandingPage()
     canvas = CanvasScreen()
 
+    app_state.screens = {
+    "welcome": welcome,
+    "login": login,
+    "create": create,
+    "landing": landing,
+    "canvas": canvas
+    }
+
     stacked.addWidget(welcome)  # index 0
     stacked.addWidget(login)    # index 1
     stacked.addWidget(create)   # index 2
