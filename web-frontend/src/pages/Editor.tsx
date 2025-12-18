@@ -11,6 +11,7 @@ import { ComponentLibrarySidebar, CanvasPropertiesSidebar } from "@/components/C
 import { ComponentItem, CanvasItem, Connection, Grip } from "@/components/Canvas/types";
 import { calculateManualPathsWithBridges } from "@/utils/routing";
 import { useHistory } from "@/hooks/useHistory";
+import { MdZoomIn,MdZoomOut } from "react-icons/md";
 
 interface CanvasState {
   items: CanvasItem[];
@@ -23,7 +24,17 @@ export default function Editor() {
 
   // --- State ---
   const [components, setComponents] = useState<Record<string, Record<string, ComponentItem>>>({});
-  
+  const handleZoomIn = () => {
+    setStageScale(prev => Math.min(3, prev + 0.1)); // Max 300%, increment 10%
+  };
+
+  const handleZoomOut = () => {
+    setStageScale(prev => Math.max(0.1, prev - 0.1)); // Min 10%, decrement 10%
+  };
+
+  const handleZoomReset = () => {
+    setStageScale(1); // Reset to 100%
+  };  
   // History Managed State (Items & Connections)
   const { 
     state: canvasState, 
@@ -564,21 +575,49 @@ export default function Editor() {
 
           {/* Floating Info Bubble */}
           <div className="absolute bottom-6 right-[45%] flex flex-col items-end gap-2 pointer-events-none">
-            <div className="flex items-center gap-3 px-4 py-2 bg-white/90 dark:bg-[#1f2938]  backdrop-blur shadow-lg border border-gray-200 rounded-full text-xs font-mono text-gray-600 pointer-events-auto">
-              <div className="flex gap-2 dark:text-gray-200">
-                <span className="font-bold text-gray-400">X</span> {cursorPos.x}
-              </div>
-              <div className="w-px h-3 bg-gray-400"></div>
-              <div className="flex gap-2 dark:text-gray-200">
-                <span className="font-bold text-gray-400">Y</span> {cursorPos.y}
-              </div>
-              <div className="w-px h-3 bg-gray-300"></div>
-              <div className="font-semibold text-blue-600">
-                {Math.round(stageScale * 100)}%
-              </div>
-            </div>
-          </div>
-
+  <div className="flex items-center gap-3 px-4 py-2 bg-white/90 dark:bg-[#1f2938] backdrop-blur shadow-lg border border-gray-200 rounded-full text-xs font-mono text-gray-600 pointer-events-auto">
+    {/* XY Coordinates */}
+    <div className="flex gap-2 dark:text-gray-200">
+      <span className="font-bold text-gray-400">X</span> {cursorPos.x}
+    </div>
+    <div className="w-px h-3 bg-gray-400"></div>
+    <div className="flex gap-2 dark:text-gray-200">
+      <span className="font-bold text-gray-400">Y</span> {cursorPos.y}
+    </div>
+    <div className="w-px h-3 bg-gray-300"></div>
+    
+    {/* Zoom Display */}
+    <div className="font-semibold text-blue-600">
+      {Math.round(stageScale * 100)}%
+    </div>
+    
+    <div className="w-px h-3 bg-gray-300"></div>
+    
+    {/* Zoom Controls */}
+    <div className="flex items-center gap-1">
+      {/* Zoom Out Button */}
+      <button
+        onClick={handleZoomOut}
+        disabled={stageScale <= 0.1} // Minimum 10%
+        className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        title="Zoom Out (Ctrl + -)"
+      >
+        <MdZoomOut className="w-3 h-3" />
+      </button>
+     
+      
+      {/* Zoom In Button */}
+      <button
+        onClick={handleZoomIn}
+        disabled={stageScale >= 3} // Maximum 300%
+        className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        title="Zoom In (Ctrl + +)"
+      >
+        <MdZoomIn className="w-3 h-3" />
+      </button>
+    </div>
+  </div>
+</div>
           {/* Connection Guidance Overlay */}
           {isDrawingConnection && (
             <div className="absolute top-6 left-1/2 -translate-x-1/2 pointer-events-none">
