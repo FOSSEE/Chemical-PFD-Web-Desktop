@@ -10,6 +10,12 @@ import { ConnectionLine } from "@/components/Canvas/ConnectionLine";
 import { ComponentLibrarySidebar, CanvasPropertiesSidebar } from "@/components/Canvas/ComponentLibrarySidebar";
 import { ComponentItem, CanvasItem, Connection, Grip } from "@/components/Canvas/types";
 import { calculateManualPathsWithBridges } from "@/utils/routing";
+import { useHistory } from "@/hooks/useHistory";
+
+interface CanvasState {
+  items: CanvasItem[];
+  connections: Connection[];
+}
 
 export default function Editor() {
   const { projectId } = useParams();
@@ -17,12 +23,40 @@ export default function Editor() {
 
   // --- State ---
   const [components, setComponents] = useState<Record<string, Record<string, ComponentItem>>>({});
-  const [droppedItems, setDroppedItems] = useState<CanvasItem[]>([]);
+  
+  // History Managed State (Items & Connections)
+  const { 
+    state: canvasState, 
+    set: setCanvasState, 
+    undo, 
+    redo, 
+    canUndo, 
+    canRedo 
+  } = useHistory<CanvasState>({ items: [], connections: [] });
+
+  const droppedItems = canvasState.items;
+  const connections = canvasState.connections;
+
+  // Helpers to maintain compatibility with existing code while pushing to history
+  const setDroppedItems = (update: React.SetStateAction<CanvasItem[]>) => {
+      setCanvasState(prev => {
+          const newItems = typeof update === 'function' ? (update as any)(prev.items) : update;
+          return { ...prev, items: newItems };
+      });
+  };
+
+  const setConnections = (update: React.SetStateAction<Connection[]>) => {
+      setCanvasState(prev => {
+          const newConnections = typeof update === 'function' ? (update as any)(prev.connections) : update;
+          return { ...prev, connections: newConnections };
+      });
+  };
+
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Connection State
-  const [connections, setConnections] = useState<Connection[]>([]);
+  // const [connections, setConnections] = useState<Connection[]>([]); // Replaced by history state
   const [selectedConnectionId, setSelectedConnectionId] = useState<number | null>(null);
   const [isDrawingConnection, setIsDrawingConnection] = useState(false);
   const [tempConnection, setTempConnection] = useState<{
@@ -74,6 +108,18 @@ export default function Editor() {
   // Handle keyboard events (Delete key)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Undo/Redo
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        undo();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
       if (e.key === 'Delete' || e.key === 'Backspace' || e.key.toLowerCase() === 'd') {
         if (selectedConnectionId !== null) {
           // Delete selected connection
@@ -88,7 +134,7 @@ export default function Editor() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedConnectionId, selectedItemId]);
+  }, [selectedConnectionId, selectedItemId, undo, redo]);
 
   // --- Handlers ---
 
@@ -216,9 +262,11 @@ export default function Editor() {
   };
 
   const handleDeleteItem = (itemId: number) => {
-    setDroppedItems(prev => prev.filter(item => item.id !== itemId));
-    // Also remove any connections attached to this item
-    setConnections(prev => prev.filter(c => c.sourceItemId !== itemId && c.targetItemId !== itemId));
+    // Atomic update for history
+    setCanvasState(prev => ({
+        items: prev.items.filter(item => item.id !== itemId),
+        connections: prev.connections.filter(c => c.sourceItemId !== itemId && c.targetItemId !== itemId)
+    }));
 
     if (selectedItemId === itemId) {
       setSelectedItemId(null);
@@ -337,8 +385,8 @@ export default function Editor() {
               <Button variant="light" size="sm" className="text-gray-700 dark:text-gray-300">Edit</Button>
             </DropdownTrigger>
             <DropdownMenu aria-label="Edit Actions">
-              <DropdownItem key="undo">Undo (Ctrl+Z)</DropdownItem>
-              <DropdownItem key="redo">Redo (Ctrl+Y)</DropdownItem>
+              <DropdownItem key="undo" onPress={undo} isDisabled={!canUndo}>Undo (Ctrl+Z)</DropdownItem>
+              <DropdownItem key="redo" onPress={redo} isDisabled={!canRedo}>Redo (Ctrl+Y)</DropdownItem>
               <DropdownItem key="delete" onPress={() => selectedItemId && handleDeleteItem(selectedItemId)}>
                 Delete Selected (Del)
               </DropdownItem>
