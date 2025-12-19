@@ -17,6 +17,7 @@ import ExportModal from '@/components/Canvas/ExportModal';
 import { useExport } from '@/hooks/useExport';
 import { ExportOptions } from '@/components/Canvas/types';
 import { FiDownload } from 'react-icons/fi';
+import { useComponents } from "@/context/ComponentContext";
 
 interface CanvasState {
   items: CanvasItem[];
@@ -45,7 +46,7 @@ export default function Editor() {
   };
 
   // --- State ---
-  const [components, setComponents] = useState<Record<string, Record<string, ComponentItem>>>({});
+  const { components } = useComponents();
   const handleZoomIn = () => {
     setStageScale(prev => Math.min(3, prev + 0.1)); // Max 300%, increment 10%
   };
