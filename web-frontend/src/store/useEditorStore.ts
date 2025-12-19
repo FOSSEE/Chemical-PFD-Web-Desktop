@@ -1,39 +1,33 @@
 // src/store/useEditorStore.ts
 import { create } from "zustand";
-import { v4 as uuidv4 } from "uuid";
 
-/** Types - adapted to match your existing types **/
-export interface ComponentItem {
-  id: number;
-  name: string;
-  object?: string;    // CSV "object" column (preferred key for counting)
-  legend?: string;    // CSV legend
-  suffix?: string;    // CSV suffix
-  svg?: string;
-  icon?: string;
-  png?: string;
-  grips?: Grip[];
-  description?: string;
-}
-
+/** Types - must match Canvas/types.ts exactly **/
 export interface Grip {
-  x: number; // percentage from left
-  y: number; // percentage from bottom
-  type: "input" | "output";
+  x: number;
+  y: number;
+  side: "top" | "bottom" | "left" | "right";
+  type?: "input" | "output"; // Optional for compatibility
 }
 
-export interface CanvasItem {
-  id: number;
+export interface ComponentItem {
+  id: number; // Required
   name: string;
-  objectKey?: string;      // object || name - used for counting
-  label?: string;          // e.g. PRV01A/B or Insulation01
+  icon: string; // Required, not optional
+  svg: string; // Required, not optional
+  class: string;
+  object: string;
+  args: any[];
+  grips?: Grip[];
+  isCustom?: boolean;
+  // Additional properties from first block
   legend?: string;
   suffix?: string;
   description?: string;
-  svg?: string;
   png?: string;
-  icon?: string;
-  grips?: Grip[];
+}
+
+export interface CanvasItem extends ComponentItem {
+  id: number;
   x: number;
   y: number;
   width: number;
@@ -41,6 +35,28 @@ export interface CanvasItem {
   rotation: number;
   sequence: number;       // increasing counter for insertion order
   addedAt: number;        // timestamp
+  label?: string;          // e.g. PRV01A/B or Insulation01
+  objectKey?: string;     // for counting
+}
+
+export interface ComponentLibrarySidebarProps {
+  components: Record<string, Record<string, ComponentItem>>;
+  onDragStart: (e: React.DragEvent, item: ComponentItem) => void;
+  onSearch?: (query: string) => void;
+  onCategoryChange?: (category: string) => void;
+  initialSearchQuery?: string;
+  selectedCategory?: string;
+  className?: string;
+}
+
+export interface CanvasPropertiesSidebarProps {
+  items: CanvasItem[];
+  selectedItemId?: number; // Should be number | undefined, not null
+  onSelectItem: (id: number) => void;
+  onDeleteItem: (id: number) => void;
+  onUpdateItem?: (id: number, patch: Partial<CanvasItem>) => void;
+  className?: string;
+  showAllItemsByDefault?: boolean;
 }
 
 export interface Connection {
@@ -59,6 +75,114 @@ export interface CanvasState {
   sequenceCounter: number;        // increments each add to preserve order
 }
 
+// StagePosition and CanvasDimensions interfaces
+export interface StagePosition {
+  x: number;
+  y: number;
+}
+
+export interface CanvasDimensions {
+  width: number;
+  height: number;
+}
+
+// CanvasItemImageProps interface
+export interface CanvasItemImageProps {
+  item: CanvasItem;
+  isSelected: boolean;
+  onSelect: () => void;
+  onChange: (newAttrs: CanvasItem) => void;
+  onDragEnd?: (item: CanvasItem) => void;
+  onTransformEnd?: (item: CanvasItem) => void;
+  onGripMouseDown?: (itemId: number, gripIndex: number, x: number, y: number) => void;
+  onGripMouseEnter?: (itemId: number, gripIndex: number) => void;
+  onGripMouseLeave?: () => void;
+  isDrawingConnection?: boolean;
+  hoveredGrip?: { itemId: number; gripIndex: number } | null;
+}
+
+// Export types
+export type ExportFormat = 'png' | 'jpg' | 'svg' | 'pdf';
+export type ExportQuality = 'low' | 'medium' | 'high';
+
+export interface ExportOptions {
+  format: ExportFormat;
+  quality: ExportQuality;
+  scale: number;
+  includeGrid: boolean;
+  includeWatermark: boolean;
+  watermarkText: string;
+  padding: number;
+  backgroundColor: string;
+}
+
+export interface ExportPreset {
+  id: string;
+  name: string;
+  description: string;
+  options: Partial<ExportOptions>;
+}
+
+export const defaultExportOptions: ExportOptions = {
+  format: 'png',
+  quality: 'high',
+  scale: 2,
+  includeGrid: false,
+  includeWatermark: false,
+  watermarkText: '',
+  padding: 20,
+  backgroundColor: '#ffffff',
+};
+
+export const exportPresets: ExportPreset[] = [
+  {
+    id: 'presentation',
+    name: 'Presentation',
+    description: 'High quality for slides',
+    options: {
+      format: 'png',
+      quality: 'high',
+      scale: 2,
+      includeGrid: false,
+      backgroundColor: '#ffffff',
+    },
+  },
+  {
+    id: 'print',
+    name: 'Print',
+    description: 'High resolution for printing',
+    options: {
+      format: 'pdf',
+      quality: 'high',
+      scale: 3,
+      includeGrid: false,
+      padding: 40,
+    },
+  },
+  {
+    id: 'web',
+    name: 'Web',
+    description: 'Optimized for web',
+    options: {
+      format: 'jpg',
+      quality: 'medium',
+      scale: 1,
+      includeGrid: false,
+    },
+  },
+  {
+    id: 'technical',
+    name: 'Technical',
+    description: 'Include grid for documentation',
+    options: {
+      format: 'svg',
+      quality: 'high',
+      includeGrid: true,
+      padding: 30,
+    },
+  },
+];
+
 /** Global store shape **/
 interface EditorStore {
   editors: Record<string, CanvasState>;
@@ -68,7 +192,7 @@ interface EditorStore {
   removeEditor: (editorId: string) => void;
 
   // item ops
-  addItem: (editorId: string, component: ComponentItem, opts?: Partial<Pick<CanvasItem, "x" | "y" | "width" | "height" | "rotation">>) => CanvasItem;
+  addItem: (editorId: string, component: Omit<ComponentItem, 'id'>, opts?: Partial<Pick<CanvasItem, "x" | "y" | "width" | "height" | "rotation">>) => CanvasItem;
   updateItem: (editorId: string, itemId: number, patch: Partial<CanvasItem>) => void;
   deleteItem: (editorId: string, itemId: number) => void;
 
@@ -148,14 +272,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     const newItem: CanvasItem = {
       id,
       name: component.name,
+      icon: component.icon || "",
+      svg: component.svg || "",
+      class: component.class || "",
+      object: component.object || component.name,
+      args: component.args || [],
       objectKey: key,
       label,
       legend,
       suffix,
       description: component.description ?? "",
-      svg: component.svg,
       png: component.png,
-      icon: component.icon,
       grips: component.grips,
       x: typeof opts.x === "number" ? opts.x : 100,
       y: typeof opts.y === "number" ? opts.y : 100,
@@ -164,6 +291,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
       rotation: typeof opts.rotation === "number" ? opts.rotation : 0,
       sequence: seq,
       addedAt: Date.now(),
+      isCustom: component.isCustom,
     };
 
     // update store
