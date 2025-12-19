@@ -48,8 +48,8 @@ function App() {
         <Route path="/editor/:projectId" element={<Editor />} />
         <Route path="/reports" element={<ReportsPage />} />
 
-      </Route>
-    </Routes>
+      </Routes>
+    </ComponentProvider>
   );
 }
 
