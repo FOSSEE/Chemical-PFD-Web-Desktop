@@ -33,10 +33,10 @@ export interface CanvasItem extends ComponentItem {
   width: number;
   height: number;
   rotation: number;
-  sequence: number;       // increasing counter for insertion order
-  addedAt: number;        // timestamp
-  label?: string;          // e.g. PRV01A/B or Insulation01
-  objectKey?: string;     // for counting
+  sequence: number; // increasing counter for insertion order
+  addedAt: number; // timestamp
+  label?: string; // e.g. PRV01A/B or Insulation01
+  objectKey?: string; // for counting
 }
 
 export interface ComponentLibrarySidebarProps {
@@ -72,7 +72,7 @@ export interface CanvasState {
   items: CanvasItem[];
   connections: Connection[];
   counts: Record<string, number>; // counts keyed by objectKey
-  sequenceCounter: number;        // increments each add to preserve order
+  sequenceCounter: number; // increments each add to preserve order
 }
 
 // StagePosition and CanvasDimensions interfaces
@@ -94,7 +94,12 @@ export interface CanvasItemImageProps {
   onChange: (newAttrs: CanvasItem) => void;
   onDragEnd?: (item: CanvasItem) => void;
   onTransformEnd?: (item: CanvasItem) => void;
-  onGripMouseDown?: (itemId: number, gripIndex: number, x: number, y: number) => void;
+  onGripMouseDown?: (
+    itemId: number,
+    gripIndex: number,
+    x: number,
+    y: number,
+  ) => void;
   onGripMouseEnter?: (itemId: number, gripIndex: number) => void;
   onGripMouseLeave?: () => void;
   isDrawingConnection?: boolean;
@@ -102,8 +107,8 @@ export interface CanvasItemImageProps {
 }
 
 // Export types
-export type ExportFormat = 'png' | 'jpg' | 'svg' | 'pdf';
-export type ExportQuality = 'low' | 'medium' | 'high';
+export type ExportFormat = "png" | "jpg" | "svg" | "pdf";
+export type ExportQuality = "low" | "medium" | "high";
 
 export interface ExportOptions {
   format: ExportFormat;
@@ -124,59 +129,59 @@ export interface ExportPreset {
 }
 
 export const defaultExportOptions: ExportOptions = {
-  format: 'png',
-  quality: 'high',
+  format: "png",
+  quality: "high",
   scale: 2,
   includeGrid: false,
   includeWatermark: false,
-  watermarkText: '',
+  watermarkText: "",
   padding: 20,
-  backgroundColor: '#ffffff',
+  backgroundColor: "#ffffff",
 };
 
 export const exportPresets: ExportPreset[] = [
   {
-    id: 'presentation',
-    name: 'Presentation',
-    description: 'High quality for slides',
+    id: "presentation",
+    name: "Presentation",
+    description: "High quality for slides",
     options: {
-      format: 'png',
-      quality: 'high',
+      format: "png",
+      quality: "high",
       scale: 2,
       includeGrid: false,
-      backgroundColor: '#ffffff',
+      backgroundColor: "#ffffff",
     },
   },
   {
-    id: 'print',
-    name: 'Print',
-    description: 'High resolution for printing',
+    id: "print",
+    name: "Print",
+    description: "High resolution for printing",
     options: {
-      format: 'pdf',
-      quality: 'high',
+      format: "pdf",
+      quality: "high",
       scale: 3,
       includeGrid: false,
       padding: 40,
     },
   },
   {
-    id: 'web',
-    name: 'Web',
-    description: 'Optimized for web',
+    id: "web",
+    name: "Web",
+    description: "Optimized for web",
     options: {
-      format: 'jpg',
-      quality: 'medium',
+      format: "jpg",
+      quality: "medium",
       scale: 1,
       includeGrid: false,
     },
   },
   {
-    id: 'technical',
-    name: 'Technical',
-    description: 'Include grid for documentation',
+    id: "technical",
+    name: "Technical",
+    description: "Include grid for documentation",
     options: {
-      format: 'svg',
-      quality: 'high',
+      format: "svg",
+      quality: "high",
       includeGrid: true,
       padding: 30,
     },
@@ -192,13 +197,28 @@ interface EditorStore {
   removeEditor: (editorId: string) => void;
 
   // item ops
-  addItem: (editorId: string, component: Omit<ComponentItem, 'id'>, opts?: Partial<Pick<CanvasItem, "x" | "y" | "width" | "height" | "rotation">>) => CanvasItem;
-  updateItem: (editorId: string, itemId: number, patch: Partial<CanvasItem>) => void;
+  addItem: (
+    editorId: string,
+    component: Omit<ComponentItem, "id">,
+    opts?: Partial<
+      Pick<CanvasItem, "x" | "y" | "width" | "height" | "rotation">
+    >,
+  ) => CanvasItem;
+
+  updateItem: (
+    editorId: string,
+    itemId: number,
+    patch: Partial<CanvasItem>,
+  ) => void;
   deleteItem: (editorId: string, itemId: number) => void;
 
   // connection ops
   addConnection: (editorId: string, conn: Omit<Connection, "id">) => Connection;
-  updateConnection: (editorId: string, connectionId: number, patch: Partial<Connection>) => void;
+  updateConnection: (
+    editorId: string,
+    connectionId: number,
+    patch: Partial<Connection>,
+  ) => void;
   removeConnection: (editorId: string, connectionId: number) => void;
 
   // batch operations
@@ -226,6 +246,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   initEditor: (editorId, initial = {}) =>
     set((s) => {
       if (s.editors[editorId]) return s; // already initialized
+
       return {
         editors: {
           ...s.editors,
@@ -242,84 +263,115 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   removeEditor: (editorId) =>
     set((s) => {
       const next = { ...s.editors };
+
       delete next[editorId];
+
       return { editors: next };
     }),
 
-  addItem: (editorId, component, opts = {}) => {
-    // ensure editor exists
-    const editor = get().editors[editorId] ?? {
-      items: [],
-      connections: [],
-      counts: {},
-      sequenceCounter: 0,
-    };
-    
-    // create key for counts (prefer object, fallback to name)
-    const key = component.object?.trim() || component.name.trim();
+  // In useEditorStore.ts, update the addItem function:
 
-    const currentCount = editor.counts[key] ?? 0;
-    const nextCount = currentCount + 1;
+addItem: (editorId, component, opts = {}) => {
+  // ensure editor exists
+  const editor = get().editors[editorId] ?? {
+    items: [],
+    connections: [],
+    counts: {},
+    sequenceCounter: 0,
+  };
 
-    const legend = component.legend ?? "";
-    const suffix = component.suffix ?? "";
+  // create key for counts (prefer object, fallback to name)
+  const key = component.object?.trim() || component.name.trim();
 
-    const label = `${legend}${padCount(nextCount)}${suffix}`; // Legend + Count + Suffix
+  const currentCount = editor.counts[key] ?? 0;
+  const nextCount = currentCount + 1;
 
-    const id = ++globalIdCounter; // Use incremental IDs for React keys
-    const seq = (editor.sequenceCounter ?? 0) + 1;
+  const legend = component.legend ?? "";
+  const suffix = component.suffix ?? "";
 
-    const newItem: CanvasItem = {
-      id,
-      name: component.name,
-      icon: component.icon || "",
-      svg: component.svg || "",
-      class: component.class || "",
-      object: component.object || component.name,
-      args: component.args || [],
-      objectKey: key,
-      label,
-      legend,
-      suffix,
-      description: component.description ?? "",
-      png: component.png,
-      grips: component.grips,
-      x: typeof opts.x === "number" ? opts.x : 100,
-      y: typeof opts.y === "number" ? opts.y : 100,
-      width: typeof opts.width === "number" ? opts.width : 80,
-      height: typeof opts.height === "number" ? opts.height : 40,
-      rotation: typeof opts.rotation === "number" ? opts.rotation : 0,
-      sequence: seq,
-      addedAt: Date.now(),
-      isCustom: component.isCustom,
-    };
+  // DEBUG: Log the component data being added
+  console.log("Adding component:", {
+    name: component.name,
+    legend,
+    suffix,
+    objectKey: key,
+    currentCount,
+    nextCount,
+    padCount: padCount(nextCount)
+  });
 
-    // update store
-    set((s) => ({
-      editors: {
-        ...s.editors,
-        [editorId]: {
-          items: [...(s.editors[editorId]?.items ?? editor.items), newItem],
-          connections: s.editors[editorId]?.connections ?? editor.connections,
-          counts: { ...(s.editors[editorId]?.counts ?? editor.counts), [key]: nextCount },
-          sequenceCounter: seq,
+  // Generate label: Legend + Count + Suffix
+  const label = `${legend}${padCount(nextCount)}${suffix}`;
+
+  const id = ++globalIdCounter;
+  const seq = (editor.sequenceCounter ?? 0) + 1;
+
+  const newItem: CanvasItem = {
+    id,
+    name: component.name,
+    icon: component.icon || "",
+    svg: component.svg || "",
+    class: component.class || "",
+    object: component.object || component.name,
+    args: component.args || [],
+    objectKey: key,
+    label, // This is the formatted label
+    legend,
+    suffix,
+    description: component.description ?? "",
+    png: component.png,
+    grips: component.grips,
+    x: typeof opts.x === "number" ? opts.x : 100,
+    y: typeof opts.y === "number" ? opts.y : 100,
+    width: typeof opts.width === "number" ? opts.width : 80,
+    height: typeof opts.height === "number" ? opts.height : 40,
+    rotation: typeof opts.rotation === "number" ? opts.rotation : 0,
+    sequence: seq,
+    addedAt: Date.now(),
+    isCustom: component.isCustom,
+  };
+
+  // DEBUG: Log the created item
+  console.log("Created CanvasItem:", {
+    label: newItem.label,
+    legend: newItem.legend,
+    suffix: newItem.suffix,
+    objectKey: newItem.objectKey
+  });
+
+  // update store
+  set((s) => ({
+    editors: {
+      ...s.editors,
+      [editorId]: {
+        items: [...(s.editors[editorId]?.items ?? editor.items), newItem],
+        connections: s.editors[editorId]?.connections ?? editor.connections,
+        counts: {
+          ...(s.editors[editorId]?.counts ?? editor.counts),
+          [key]: nextCount,
         },
+        sequenceCounter: seq,
       },
-    }));
+    },
+  }));
 
-    return newItem;
-  },
+  return newItem;
+},
 
   updateItem: (editorId, itemId, patch) => {
     set((s) => {
       const ed = s.editors[editorId];
+
       if (!ed) return s;
+
       return {
         editors: {
           ...s.editors,
           [editorId]: {
             ...ed,
-            items: ed.items.map((it) => (it.id === itemId ? { ...it, ...patch } : it)),
+            items: ed.items.map((it) =>
+              it.id === itemId ? { ...it, ...patch } : it,
+            ),
           },
         },
       };
@@ -329,11 +381,12 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   deleteItem: (editorId, itemId) => {
     set((s) => {
       const ed = s.editors[editorId];
+
       if (!ed) return s;
-      
+
       // Also remove connections associated with this item
       const filteredConnections = ed.connections.filter(
-        conn => conn.sourceItemId !== itemId && conn.targetItemId !== itemId
+        (conn) => conn.sourceItemId !== itemId && conn.targetItemId !== itemId,
       );
 
       return {
@@ -353,9 +406,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   addConnection: (editorId, conn) => {
     const id = ++globalIdCounter;
     const newConnection: Connection = { id, ...conn };
-    
+
     set((s) => {
-      const ed = s.editors[editorId] ?? { items: [], connections: [], counts: {}, sequenceCounter: 0 };
+      const ed = s.editors[editorId] ?? {
+        items: [],
+        connections: [],
+        counts: {},
+        sequenceCounter: 0,
+      };
+
       return {
         editors: {
           ...s.editors,
@@ -366,21 +425,23 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
         },
       };
     });
-    
+
     return newConnection;
   },
 
   updateConnection: (editorId, connectionId, patch) => {
     set((s) => {
       const ed = s.editors[editorId];
+
       if (!ed) return s;
+
       return {
         editors: {
           ...s.editors,
           [editorId]: {
             ...ed,
-            connections: ed.connections.map((conn) => 
-              conn.id === connectionId ? { ...conn, ...patch } : conn
+            connections: ed.connections.map((conn) =>
+              conn.id === connectionId ? { ...conn, ...patch } : conn,
             ),
           },
         },
@@ -391,7 +452,9 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   removeConnection: (editorId, connectionId) => {
     set((s) => {
       const ed = s.editors[editorId];
+
       if (!ed) return s;
+
       return {
         editors: {
           ...s.editors,
@@ -417,14 +480,18 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   getItemsInOrder: (editorId) => {
     const ed = get().editors[editorId];
+
     if (!ed) return [];
+
     return [...ed.items].sort((a, b) => a.sequence - b.sequence);
   },
 
   resetCounts: (editorId) => {
     set((s) => {
       const ed = s.editors[editorId];
+
       if (!ed) return s;
+
       return {
         editors: {
           ...s.editors,
@@ -444,6 +511,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
   exportEditorJSON: (editorId) => {
     const ed = get().editors[editorId];
+
     return ed ? JSON.parse(JSON.stringify(ed)) : null; // deep copy
   },
 }));
