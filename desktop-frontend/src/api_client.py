@@ -43,6 +43,25 @@ def login(username: str, password: str):
     else:
         raise ApiError(f"Server error: {resp.status_code}")
 
+
+def get_components():
+    """
+    Fetch list of components from /api/components/
+    """
+    url = f"{app_state.BACKEND_BASE_URL}/api/components/"
+    try:
+        headers = {}
+        if app_state.access_token:
+            headers["Authorization"] = f"Bearer {app_state.access_token}"
+        
+        resp = requests.get(url, headers=headers, timeout=DEFAULT_TIMEOUT)
+        if resp.status_code == 200:
+            return resp.json()
+    except Exception as e:
+        print(f"Failed to fetch components: {e}")
+    return []
+
+
 def register(username: str, email: str, password: str):
     """
     Call Django /api/auth/register/ and return JSON if needed.
