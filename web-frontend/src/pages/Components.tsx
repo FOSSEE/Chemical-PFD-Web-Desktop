@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Input, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Select, SelectItem, Card, CardBody, CardFooter, Image } from "@heroui/react";
+import { Button, Input, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Select, SelectItem, Card, CardBody, CardFooter, Image, Tooltip } from "@heroui/react";
 import { useComponents } from "@/context/ComponentContext";
 import { ComponentItem } from "@/components/Canvas/types";
 
@@ -136,33 +136,35 @@ export default function Components() {
                         </h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             {Object.values(items).map((item) => (
-                                <Card key={item.name} isPressable className="border-none bg-white dark:bg-gray-800 shadow-sm hover:shadow-md group relative">
-                                    <CardBody className="p-4 flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/50">
-                                        <div className="w-16 h-16 flex items-center justify-center">
-                                            <Image
-                                                src={typeof item.icon === 'string' ? item.icon : (item.icon as any)?.src || item.icon} // Handle imported image module vs string
-                                                alt={item.name}
-                                                className="max-w-full max-h-full object-contain"
-                                                radius="none"
-                                            />
-                                        </div>
-                                    </CardBody>
-                                    <CardFooter className="justify-between">
-                                        <div className="text-small font-medium truncate w-full text-center text-gray-700 dark:text-gray-300">{item.name}</div>
-                                        {item.isCustom && (
-                                            <Button
-                                                size="sm"
-                                                variant="light"
-                                                isIconOnly
-                                                className="absolute top-1 right-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 backdrop-blur-sm z-10"
-                                                onPress={() => handleEdit(catName, item)}
-                                                aria-label="Edit"
-                                            >
-                                                <span className="text-lg">✎</span>
-                                            </Button>
-                                        )}
-                                    </CardFooter>
-                                </Card>
+                                <Tooltip content={<div className="text-xs"><div className="font-bold">{item.name}</div></div>}>
+                                    <Card key={item.name} isPressable className="border-none bg-white dark:bg-gray-800 shadow-sm hover:shadow-md group relative">
+                                        <CardBody className="p-4 flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/50">
+                                            <div className="w-16 h-16 flex items-center justify-center">
+                                                <Image
+                                                    src={typeof item.icon === 'string' ? item.icon : (item.icon as any)?.src || item.icon} // Handle imported image module vs string
+                                                    alt={item.name}
+                                                    className="max-w-full max-h-full object-contain"
+                                                    radius="none"
+                                                />
+                                            </div>
+                                        </CardBody>
+                                        <CardFooter className="justify-between">
+                                            <div className="text-small font-medium truncate w-full text-center text-gray-700 dark:text-gray-300">{item.name}</div>
+                                            {item.isCustom && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="light"
+                                                    isIconOnly
+                                                    className="absolute top-1 right-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 backdrop-blur-sm z-10"
+                                                    onPress={() => handleEdit(catName, item)}
+                                                    aria-label="Edit"
+                                                >
+                                                    <span className="text-lg">✎</span>
+                                                </Button>
+                                            )}
+                                        </CardFooter>
+                                    </Card>
+                                </Tooltip>
                             ))}
                         </div>
                     </div>

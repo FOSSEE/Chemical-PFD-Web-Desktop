@@ -26,9 +26,9 @@ export const CNavbar =() => {
           <NavbarItem isActive={location.pathname === "/components"}>
             <Link color="foreground" href="/components">Components DB</Link>
           </NavbarItem>
-          <NavbarItem isActive={location.pathname === "/reports"}>
-            <Link color="foreground" href="/reports">Reports</Link>
-          </NavbarItem> 
+          {/* <NavbarItem isActive={location.pathname === "/reports"}> */}
+            {/* <Link color="foreground" href="/reports">Reports</Link> */}
+          {/* </NavbarItem>  */}
         </NavbarContent>
 
         <NavbarContent justify="end">

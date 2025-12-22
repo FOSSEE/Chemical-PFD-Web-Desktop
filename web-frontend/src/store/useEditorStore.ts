@@ -10,7 +10,7 @@ export interface Grip {
 }
 
 export interface ComponentItem {
-  id: number; // Required
+  id?: number; // Optional
   name: string;
   icon: string; // Required, not optional
   svg: string; // Required, not optional

@@ -48,11 +48,11 @@ export const ComponentLibrarySidebar = ({
   const handleCategorySelect = (category: string) => {
     setActiveCategory(category);
     onCategoryChange?.(category);
-  }; 
+  };
 
   return (
     <div
-      className={`w-64 border-r flex flex-col bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ${className}`}
+      className={`w-64 border-r flex flex-col bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 h-full ${className}`}
     >
       <br />
       <div className="p-3 border-b border-gray-200 dark:border-gray-700">
@@ -71,11 +71,10 @@ export const ComponentLibrarySidebar = ({
 
         <div className="flex gap-1 overflow-x-auto pb-1">
           <button
-            className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
-              activeCategory === "All"
+            className={`text-xs px-2 py-1 rounded whitespace-nowrap ${activeCategory === "All"
                 ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
                 : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-            }`}
+              }`}
             onClick={() => handleCategorySelect("All")}
           >
             All
@@ -83,11 +82,10 @@ export const ComponentLibrarySidebar = ({
           {categories.map((category) => (
             <button
               key={category}
-              className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
-                activeCategory === category
+              className={`text-xs px-2 py-1 rounded whitespace-nowrap ${activeCategory === category
                   ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-              }`}
+                }`}
               onClick={() => handleCategorySelect(category)}
             >
               {category}
@@ -198,7 +196,7 @@ export const CanvasPropertiesSidebar = ({
 
   return (
     <div
-      className={`w-72 border-l p-4 flex flex-col bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 ${className}`}
+      className={`w-72 border-l p-4 flex flex-col bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 h-full ${className}`}
     >
       {/* Header with view toggle */}
       <br />
@@ -235,11 +233,10 @@ export const CanvasPropertiesSidebar = ({
                   {sortedItems.map((item) => (
                     <div
                       key={item.id}
-                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                        selectedItemId === item.id
+                      className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedItemId === item.id
                           ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                           : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                      }`}
+                        }`}
                       onClick={() => onSelectItem(item.id)}
                     >
                       <div className="flex items-center gap-3">

@@ -67,7 +67,7 @@
             "args": []
         },
         "One Cell Fired Heater, Furnace": {
-            "name": "One Cell Fired Heater, Furnace",
+            "name": "One Cell Fired Heater",
             "icon": "./assets/toolbar/Furnaces and Boilers/One Cell Fired Heater, Furnace.png",
             "svg": "./assets/svg/Furnaces and Boilers/One Cell Fired Heater, Furnace.svg",
             "class": "Furnaces and Boilers",
@@ -75,7 +75,7 @@
             "args": []
         },
         "Two Cell Fired Heater, Furnace": {
-            "name": "Two Cell Fired Heater, Furnace",
+            "name": "Two Cell Fired Heater",
             "icon": "./assets/toolbar/Furnaces and Boilers/Two Cell Fired Heater, Furnace.png",
             "svg": "./assets/svg/Furnaces and Boilers/Two Cell Fired Heater, Furnace.svg",
             "class": "Furnaces and Boilers",

@@ -233,22 +233,9 @@ export default function Editor() {
         if (selectedConnectionId !== null && projectId) {
           editorStore.removeConnection(projectId, selectedConnectionId);
 
-          // ---------- sync history state after mutation ----------
-          const latest = editorStore.getEditorState(projectId);
-
-          if (latest) setCanvasState(latest);
-          // ----------------------------------------------------------------
-
           setSelectedConnectionId(null);
         } else if (selectedItemId !== null && projectId) {
           editorStore.deleteItem(projectId, selectedItemId);
-
-          // ---------- sync history state after mutation ----------
-          const latest = editorStore.getEditorState(projectId);
-
-          if (latest) setCanvasState(latest);
-          // ----------------------------------------------------------------
-
           setSelectedItemId(null);
         }
       }
@@ -328,11 +315,6 @@ export default function Editor() {
             rotation: 0,
           });
 
-          // ---------- sync history state after mutation ----------
-          const latest = editorStore.getEditorState(projectId!);
-
-          if (latest) setCanvasState(latest);
-          // ----------------------------------------------------------------
 
           setSelectedItemId(newItem.id);
         };
@@ -401,12 +383,6 @@ export default function Editor() {
 
     editorStore.deleteItem(projectId, itemId);
 
-    // ---------- sync history state after mutation ----------
-    const latest = editorStore.getEditorState(projectId);
-
-    if (latest) setCanvasState(latest);
-    // ----------------------------------------------------------------
-
     if (selectedItemId === itemId) setSelectedItemId(null);
   };
 
@@ -429,11 +405,7 @@ export default function Editor() {
 
     editorStore.updateItem(projectId, itemId, updates);
 
-    // ---------- sync history state after mutation ----------
-    const latest = editorStore.getEditorState(projectId);
 
-    if (latest) setCanvasState(latest);
-    // ----------------------------------------------------------------
   };
 
   const handleSelectItem = (itemId: number) => {
@@ -468,11 +440,7 @@ export default function Editor() {
         waypoints: tempConnection.waypoints,
       });
 
-      // ---------- sync history state after mutation ----------
-      const latest = editorStore.getEditorState(projectId);
 
-      if (latest) setCanvasState(latest);
-      // ----------------------------------------------------------------
 
       setIsDrawingConnection(false);
       setTempConnection(null);
@@ -512,10 +480,10 @@ export default function Editor() {
           setTempConnection((prev) =>
             prev
               ? {
-                  ...prev,
-                  currentX: pointer.x,
-                  currentY: pointer.y,
-                }
+                ...prev,
+                currentX: pointer.x,
+                currentY: pointer.y,
+              }
               : null
           );
         }
@@ -549,27 +517,21 @@ export default function Editor() {
     console.log("%c[EDITOR]", "color:#22c55e", ...args);
 
   // ---------- Initialize editor from editor store ----------
-// ---------- Initialize editor from editor store ----------
-useEffect(() => {
-  if (!projectId) return;
+  // Sync store with history
+  useEffect(() => {
+    if (!projectId) return;
 
-  log("INITIALIZE EDITOR", {
-    projectId,
-  });
+    if (!editorStore.getEditorState(projectId)) {
+      editorStore.initEditor(projectId);
+    }
+  }, [projectId, editorStore]);
 
-  const existingState = editorStore.getEditorState(projectId);
-
-  if (!existingState) {
-    editorStore.initEditor(projectId);
-  }
-
-  // Only update if the state has actually changed
-  const latest = editorStore.getEditorState(projectId);
-  if (latest && JSON.stringify(latest) !== JSON.stringify(canvasState)) {
-    setCanvasState(latest);
-  }
-}, [projectId, editorStore, canvasState, setCanvasState]);
-// -------------------------------------------------------------------------------
+  useEffect(() => {
+    if (currentState && projectId) {
+      setCanvasState(currentState);
+    }
+  }, [currentState, projectId, setCanvasState]);
+  // -------------------------------------------------------------------------------
   // -------------------------------------------------------------------------------
 
   return (
@@ -785,12 +747,12 @@ useEffect(() => {
                     setTempConnection((prev) =>
                       prev
                         ? {
-                            ...prev,
-                            waypoints: [
-                              ...prev.waypoints,
-                              { x: pointer.x, y: pointer.y },
-                            ],
-                          }
+                          ...prev,
+                          waypoints: [
+                            ...prev.waypoints,
+                            { x: pointer.x, y: pointer.y },
+                          ],
+                        }
                         : prev
                     );
                   }
@@ -1032,7 +994,7 @@ useEffect(() => {
           onClose={() => setShowExportModal(false)}
           onExport={handleExport}
         />
-       
+
 
         <ExportReportModal
           editorId={projectId ?? ""}

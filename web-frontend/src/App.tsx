@@ -46,7 +46,7 @@ function App() {
         </Route>
 
         {/* Other Routes */}
-        <Route path="/reports" element={<ReportsPage />} />
+        {/* <Route path="/reports" element={<ReportsPage />} /> */}
       </Routes>
     </ComponentProvider>
   );
