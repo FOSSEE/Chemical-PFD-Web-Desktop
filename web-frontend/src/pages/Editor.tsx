@@ -1036,7 +1036,7 @@ export default function Editor() {
                   </span>
                   <div className="w-px h-3 bg-white/20" />
                   <span className="text-white/80 text-xs">
-                    Press 'Del', 'Backspace' or 'D' to delete selection
+                    Press Ctrl+Backspace to delete selection
                   </span>
                 </div>
               </div>
