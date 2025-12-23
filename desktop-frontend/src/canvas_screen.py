@@ -532,7 +532,6 @@ class CanvasScreen(QMainWindow):
         self.menu_manager.save_project_clicked.connect(lambda: print("Save Project clicked"))
         self.menu_manager.generate_image_clicked.connect(lambda: print("Generate Image clicked"))
         self.menu_manager.generate_report_clicked.connect(lambda: print("Generate Report clicked"))
-        self.menu_manager.add_symbols_clicked.connect(lambda: print("Add Symbols clicked"))
 
     def on_new_project(self):
         """Switch to the canvas view."""
