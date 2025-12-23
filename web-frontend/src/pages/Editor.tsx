@@ -1060,6 +1060,8 @@ export default function Editor() {
                   </div>
 
                   <div className="pt-2 text-[10px] text-foreground/50">
+                    Ctrl+Click to select multiple items
+                    <br />
                     Ctrl (Windows/Linux) or Cmd (Mac)
                   </div>
                 </div>

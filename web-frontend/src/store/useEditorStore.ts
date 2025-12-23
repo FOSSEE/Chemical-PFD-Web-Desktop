@@ -466,15 +466,15 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           ...s.editors,
           [editorId]: {
             ...ed,
-            connections: ed.connections.filter((c) => c.id !== connectionId),
+            connections: ed.connections.filter((c: Connection) => c.id !== connectionId),
           },
         },
       };
     });
   },
 
-  batchUpdateItems: (editorId, updates) => {
-    set((s) => {
+  batchUpdateItems: (editorId: string, updates: { id: number; patch: Partial<CanvasItem> }[]) => {
+    set((s: EditorStore) => {
       const ed = s.editors[editorId];
       if (!ed) return s;
 
@@ -498,8 +498,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     });
   },
 
-  batchDeleteItems: (editorId, itemIds) => {
-    set((s) => {
+  batchDeleteItems: (editorId: string, itemIds: number[]) => {
+    set((s: EditorStore) => {
       const ed = s.editors[editorId];
       if (!ed) return s;
 
@@ -507,7 +507,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
 
       // Also remove connections associated with these items
       const filteredConnections = ed.connections.filter(
-        (conn) =>
+        (conn: Connection) =>
           !idsSet.has(conn.sourceItemId) && !idsSet.has(conn.targetItemId),
       );
 
@@ -516,7 +516,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           ...s.editors,
           [editorId]: {
             ...ed,
-            items: ed.items.filter((it) => !idsSet.has(it.id)),
+            items: ed.items.filter((it: CanvasItem) => !idsSet.has(it.id)),
             connections: filteredConnections,
           },
         },
@@ -524,8 +524,8 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     });
   },
 
-  batchRemoveConnections: (editorId, connectionIds) => {
-    set((s) => {
+  batchRemoveConnections: (editorId: string, connectionIds: number[]) => {
+    set((s: EditorStore) => {
       const ed = s.editors[editorId];
       if (!ed) return s;
 
@@ -536,7 +536,7 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
           ...s.editors,
           [editorId]: {
             ...ed,
-            connections: ed.connections.filter((c) => !idsSet.has(c.id)),
+            connections: ed.connections.filter((c: Connection) => !idsSet.has(c.id)),
           },
         },
       };
