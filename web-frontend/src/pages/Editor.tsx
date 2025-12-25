@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownItem,
   Tooltip,
+  Switch,
 } from "@heroui/react";
 import {
   TbLayoutSidebarRightExpand,
@@ -1099,6 +1100,7 @@ export default function Editor() {
           {/* Floating Info Bubble */}
           <div className="absolute bottom-6 right-[38%] flex flex-col items-end gap-2 pointer-events-none">
             <div className="flex items-center gap-3 px-4 py-2 bg-white/90 dark:bg-[#1f2938] backdrop-blur shadow-lg border border-gray-200 rounded-full text-xs font-mono text-gray-600 pointer-events-auto">
+
               {/* XY Coordinates */}
               <div className="flex gap-2 dark:text-gray-200">
                 <span className="font-bold text-gray-400">X</span> {cursorPos.x}
@@ -1109,22 +1111,29 @@ export default function Editor() {
               </div>
 
               <div className="w-px h-3 bg-gray-300" />
-              {/* Grid Toggle Button */}
-              <button
-                className="w-8 h-8 flex items-center justify-center rounded-full
-      bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700
-      border border-gray-300 dark:border-gray-600
-      shadow-sm hover:shadow
-      transition-all duration-200"
-                title={showGrid ? "Hide Grid" : "Show Grid"}
-                onClick={handleToggleGrid}
-              >
-                {showGrid ? (
-                  <TbGridDots className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                ) : (
-                  <TbGridPattern className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                )}
-              </button>
+
+              <div className="flex items-center gap-3">
+                {/* Show Grid Button */}
+                <Tooltip content={showGrid ? "Hide Grid" : "Show Grid"} placement="top">
+                  <button
+                    className={`w-8 h-8 flex items-center justify-center rounded-md 
+        border border-gray-300 dark:border-gray-700 
+        bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 
+        transition-all duration-150`}
+                    onClick={() => setShowGrid((prev) => !prev)}
+                    aria-label="Toggle Grid Visibility"
+                  >
+                    {showGrid ? <TbGridDots className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                      : <TbGridPattern className="w-4 h-4 text-gray-600 dark:text-gray-300" />}
+                  </button>
+                </Tooltip>
+
+                
+              </div>
+
+
+              <div className="w-px h-3 bg-gray-300" />
+
               {/* Zoom Controls */}
               <div className="flex items-center gap-2">
                 {/* Zoom Out Button */}
@@ -1142,9 +1151,8 @@ export default function Editor() {
                   <MdZoomOut className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 </button>
 
-                {/* Zoom Percentage Display & Reset */}
+                {/* Zoom Percentage Display */}
                 <div className="flex items-center">
-                  {/* Percentage Display */}
                   <div
                     className="px-3 py-1.5 text-sm font-medium
                 bg-gray-50 dark:bg-gray-800 
@@ -1153,9 +1161,9 @@ export default function Editor() {
                   >
                     {Math.round(stageScale * 100)}%
                   </div>
-
-                  {/* Reset Button */}
                 </div>
+
+                {/* Center Content Button */}
                 <button
                   className="w-8 h-8 flex items-center justify-center rounded-full
                 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700
