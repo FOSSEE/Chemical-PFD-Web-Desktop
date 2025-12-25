@@ -279,6 +279,12 @@ class CanvasWidget(QWidget):
     def create_component_command(self, text, pos):
         svg = resources.find_svg_path(text, self.base_dir)
         config = resources.get_component_config_by_name(text, self.component_config) or {}
+        # Important: Copy config to prevent shared state between same components
+        config = config.copy()
+        
+        # Ensure name is set
+        if "name" not in config:
+            config["name"] = text
 
         # Label generation
         key = resources.clean_string(text)
@@ -311,3 +317,7 @@ class CanvasWidget(QWidget):
     def export_to_pdf(self, filename):
         from src.canvas.export import export_to_pdf
         export_to_pdf(self, filename)
+
+    def generate_report(self, filename):
+        from src.canvas.export import generate_report_pdf
+        generate_report_pdf(self, filename)
