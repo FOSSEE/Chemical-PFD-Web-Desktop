@@ -1,4 +1,4 @@
-// Editor.tsx (updated - removed localStorage syncing)
+// Editor.tsx (integrated version)
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Stage, Layer, Line, Shape } from "react-konva";
@@ -34,7 +34,6 @@ import {
   CanvasPropertiesSidebar,
 } from "@/components/Canvas/ComponentLibrarySidebar";
 import { calculateManualPathsWithBridges } from "@/utils/routing";
-import { useHistory } from "@/hooks/useHistory";
 import { useComponents } from "@/context/ComponentContext";
 import ExportModal from "@/components/Canvas/ExportModal";
 import { useExport } from "@/hooks/useExport";
@@ -45,11 +44,11 @@ import {
 import {
   type ComponentItem,
   type CanvasItem,
-  type CanvasState,
   type Connection,
 } from "@/components/Canvas/types";
 import { ExportReportModal } from "@/components/Canvas/ExportReportModal";
 import { TbGridDots, TbGridPattern } from "react-icons/tb";
+
 type Shortcut = {
   key: string;
   label: string;
@@ -58,65 +57,46 @@ type Shortcut = {
   requireCtrl?: boolean;
 };
 
-
-
 export default function Editor() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
-  // State variables related to history were removed as they were unused
-
-
-  // Add this with your other state variables
   const [snapToGrid, setSnapToGrid] = useState(true);
-  const [gridSize, setGridSize] = useState(20); // Grid size in pixels (at scale 1)
+  const [gridSize, setGridSize] = useState(20);
+
+  // Get editor store methods
+  const editorStore = useEditorStore();
+  
+  // Get current state from store
+  const currentState = useMemo(() => {
+    if (!projectId) return null;
+    return editorStore.getEditorState(projectId);
+  }, [projectId, editorStore]);
+  
+  // Initialize editor when projectId changes
+  useEffect(() => {
+    if (projectId) {
+      editorStore.initEditor(projectId);
+    }
+  }, [projectId, editorStore]);
+  
+  // Extract data from current state
+  const droppedItems = useMemo(() => {
+    if (!projectId) return [];
+    return editorStore.getItemsInOrder(projectId);
+  }, [projectId, editorStore, currentState?.items]);
+  
+  const connections = useMemo(() => {
+    return currentState?.connections || [];
+  }, [currentState?.connections]);
+  
+  const canUndo = projectId ? editorStore.canUndo(projectId) : false;
+  const canRedo = projectId ? editorStore.canRedo(projectId) : false;
 
   const isCtrlOrCmd = (e: KeyboardEvent) => e.ctrlKey || e.metaKey;
 
-  // ---------- Build initial state ----------
-  const editorStore = useEditorStore();
-  const initialEditorState = useMemo<CanvasState>(() => {
-    if (projectId) {
-      const s = editorStore.getEditorState(projectId);
-
-      return (
-        s ?? {
-          items: [],
-          connections: [],
-          counts: {},
-          sequenceCounter: 0,
-        }
-      );
-    }
-
-    return {
-      items: [],
-      connections: [],
-      counts: {},
-      sequenceCounter: 0,
-    };
-  }, [projectId, editorStore]);
-
-  // initialize history with a valid initial state
-  const {
-    state: canvasState,
-    set: setCanvasState,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-  } = useHistory<CanvasState>(initialEditorState);
-  // -------------------------------------------------------------------------
-
   // Export diagram states
-  const currentState = projectId ? editorStore.getEditorState(projectId) : null;
-  const droppedItems = projectId
-    ? editorStore.getItemsInOrder(projectId)
-    : canvasState?.items || [];
-
-  const connections = canvasState?.connections || [];
-
   const [showExportModal, setShowExportModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
@@ -134,11 +114,11 @@ export default function Editor() {
   // --- State ---
   const { components } = useComponents();
   const handleZoomIn = () => {
-    setStageScale((prev) => Math.min(3, prev + 0.1)); // Max 300%, increment 10%
+    setStageScale((prev) => Math.min(3, prev + 0.1));
   };
 
   const handleZoomOut = () => {
-    setStageScale((prev) => Math.max(0.1, prev - 0.1)); // Min 10%, decrement 10%
+    setStageScale((prev) => Math.max(0.1, prev - 0.1));
   };
 
   const handleToggleGrid = () => {
@@ -147,14 +127,11 @@ export default function Editor() {
 
   const handleCenterToContent = () => {
     if (droppedItems.length === 0) {
-      // If no items, reset view
       setStagePos({ x: 0, y: 0 });
       setStageScale(1);
-
       return;
     }
 
-    // Calculate bounding box of all items
     let minX = Infinity;
     let minY = Infinity;
     let maxX = -Infinity;
@@ -167,7 +144,6 @@ export default function Editor() {
       maxY = Math.max(maxY, item.y + item.height);
     });
 
-    // Add some padding
     const padding = 100;
     const contentWidth = maxX - minX + padding * 2;
     const contentHeight = maxY - minY + padding * 2;
@@ -176,31 +152,27 @@ export default function Editor() {
       const containerWidth = stageSize.width;
       const containerHeight = stageSize.height;
 
-      // Calculate scale to fit content
       const scaleX = containerWidth / contentWidth;
       const scaleY = containerHeight / contentHeight;
-      const scale = Math.min(scaleX, scaleY, 1); // Don't zoom in beyond 100%
+      const scale = Math.min(scaleX, scaleY, 1);
 
-      // Calculate center position
       const centerX = minX - padding + contentWidth / 2;
       const centerY = minY - padding + contentHeight / 2;
 
       const targetX = containerWidth / 2 - centerX * scale;
       const targetY = containerHeight / 2 - centerY * scale;
 
-      // Animate to position
       setStageScale(scale);
       setStagePos({ x: targetX, y: targetY });
     }
   };
-  // History management (now initialized above)
 
-  // Use items and connections from history state
-
+  // Selection state
   const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(new Set());
   const [selectedConnectionIds, setSelectedConnectionIds] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Connection drawing state
   const [isDrawingConnection, setIsDrawingConnection] = useState(false);
   const [tempConnection, setTempConnection] = useState<{
     sourceItemId: number;
@@ -220,18 +192,19 @@ export default function Editor() {
   const [stageScale, setStageScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
 
   // Refs
-  const stageRef = useRef<Konva.Stage>(null); // loosened type to avoid runtime null issues
+  const stageRef = useRef<Konva.Stage>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragItemRef = useRef<ComponentItem | null>(null);
 
   // --- Helpers ---
-
   const connectionPaths = useMemo(
     () => calculateManualPathsWithBridges(connections, droppedItems),
     [connections, droppedItems]
   );
+
   const handleCancelDrawing = () => {
     if (isDrawingConnection) {
       setIsDrawingConnection(false);
@@ -239,16 +212,23 @@ export default function Editor() {
     }
   };
 
+  const snapToGridPosition = (x: number, y: number) => {
+    if (!snapToGrid) return { x, y };
+    const effectiveGridSize = gridSize;
+    return {
+      x: Math.round(x / effectiveGridSize) * effectiveGridSize,
+      y: Math.round(y / effectiveGridSize) * effectiveGridSize,
+    };
+  };
 
-  // --- Event Listeners ---
-
-  const shortcuts: Shortcut[] = [
+  // --- Shortcuts ---
+  const shortcuts: Shortcut[] = useMemo(() => [
     {
       key: "z",
       label: "Undo",
       display: "Ctrl + Z",
       requireCtrl: true,
-      handler: undo,
+      handler: () => projectId && editorStore.undo(projectId),
     },
     {
       key: "g",
@@ -269,7 +249,7 @@ export default function Editor() {
       label: "Redo",
       display: "Ctrl + Y",
       requireCtrl: true,
-      handler: redo,
+      handler: () => projectId && editorStore.redo(projectId),
     },
     {
       key: "c",
@@ -296,20 +276,20 @@ export default function Editor() {
           setSelectedItemIds(new Set());
         }
       },
-    }, {
+    },
+    {
       key: "escape",
       label: "Cancel Drawing",
       display: "Esc",
       requireCtrl: false,
       handler: handleCancelDrawing,
     },
-  ];
+  ], [projectId, editorStore, selectedItemIds, selectedConnectionIds, snapToGrid]);
 
-  // Handle keyboard events (Delete key)
+  // Handle keyboard events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
-
 
       for (const shortcut of shortcuts) {
         const matchesKey =
@@ -328,33 +308,18 @@ export default function Editor() {
       }
     };
 
-
     window.addEventListener("keydown", handleKeyDown);
-
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    selectedConnectionIds,
-    selectedItemIds,
-    undo,
-    redo,
-    projectId,
-    editorStore,
-    setCanvasState,
-    isDrawingConnection,
-  ]);
-
+  }, [shortcuts]);
 
   // --- Handlers ---
   const handleDragStart = (e: React.DragEvent, item: ComponentItem) => {
     dragItemRef.current = item;
 
-    // Set drag image (ghost)
     if (item.svg) {
       const img = new Image();
-
       img.src = item.svg;
       const canvas = document.createElement("canvas");
-
       canvas.width = 80;
       canvas.height = 80;
       const ctx = canvas.getContext("2d");
@@ -373,45 +338,26 @@ export default function Editor() {
       }
     }
   };
-  // Add this helper function after your other handlers
-  // use stage coordinates for snapping — do NOT multiply by stageScale here
-  const snapToGridPosition = (x: number, y: number) => {
-    if (!snapToGrid) return { x, y };
-
-    // gridSize is already in stage coordinates
-    const effectiveGridSize = gridSize;
-
-    return {
-      x: Math.round(x / effectiveGridSize) * effectiveGridSize,
-      y: Math.round(y / effectiveGridSize) * effectiveGridSize,
-    };
-  };
-
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const stage = stageRef.current;
 
     if (dragItemRef.current && stage && projectId) {
-      // Konva Stage#setPointersPositions expects a DOM event
-      // pass nativeEvent (you already did this) — keep it but guard existence
       try {
         stage.setPointersPositions(e.nativeEvent);
       } catch {
-        // fallback: try to compute pointer from event coords
+        // fallback
       }
 
       const pointer = stage.getRelativePointerPosition?.();
 
       if (pointer) {
         const droppedItem = dragItemRef.current;
-
         const img = new Image();
-
         img.src = droppedItem.svg || droppedItem.icon || "";
 
         const finalizeAdd = (width: number, height: number) => {
-          // Snap the position to grid
           let x = pointer.x - width / 2;
           let y = pointer.y - height / 2;
 
@@ -421,7 +367,7 @@ export default function Editor() {
             y = snapped.y;
           }
 
-          const newItem = editorStore.addItem(projectId!, droppedItem, {
+          const newItem = editorStore.addItem(projectId, droppedItem, {
             x,
             y,
             width,
@@ -429,8 +375,11 @@ export default function Editor() {
             rotation: 0,
           });
 
-          setSelectedItemIds(new Set([newItem.id]));
+          if (newItem) {
+            setSelectedItemIds(new Set([newItem.id]));
+          }
         };
+
         img.onload = () => {
           const aspectRatio = img.width / img.height;
           const baseSize = 80;
@@ -461,7 +410,6 @@ export default function Editor() {
     if (!stage) return;
 
     if (e.evt.ctrlKey) {
-      // Zoom logic
       const scaleBy = 1.05;
       const oldScale = stage.scaleX();
       const pointer = stage.getPointerPosition();
@@ -482,7 +430,6 @@ export default function Editor() {
         y: pointer.y - mousePointTo.y * newScale,
       });
     } else {
-      // Pan logic
       setStagePos((prev: { x: number; y: number }) => ({
         x: prev.x - e.evt.deltaX,
         y: prev.y - e.evt.deltaY,
@@ -494,7 +441,6 @@ export default function Editor() {
     if (!projectId) return;
 
     editorStore.deleteItem(projectId, itemId);
-
     setSelectedItemIds((prev: Set<number>) => {
       const next = new Set(prev);
       next.delete(itemId);
@@ -503,37 +449,8 @@ export default function Editor() {
   };
 
   const handleUpdateItem = (itemId: number, updates: Partial<CanvasItem>) => {
-    // ---------- LOCAL (no projectId) ----------
-    if (!projectId) {
-      setCanvasState((prev) => {
-        if (!prev) return prev;
+    if (!projectId) return;
 
-        let patched = { ...updates };
-
-        if (snapToGrid && (updates.x !== undefined || updates.y !== undefined)) {
-          const currentItem = prev.items.find(i => i.id === itemId);
-          if (currentItem) {
-            const x = updates.x ?? currentItem.x;
-            const y = updates.y ?? currentItem.y;
-            const snapped = snapToGridPosition(x, y);
-
-            if (updates.x !== undefined) patched.x = snapped.x;
-            if (updates.y !== undefined) patched.y = snapped.y;
-          }
-        }
-
-        return {
-          ...prev,
-          items: prev.items.map((it) =>
-            it.id === itemId ? { ...it, ...patched } : it
-          ),
-        };
-      });
-
-      return;
-    }
-
-    // ---------- PROJECT MODE ----------
     let snappedUpdates: Partial<CanvasItem> = { ...updates };
 
     if (snapToGrid && (updates.x !== undefined || updates.y !== undefined)) {
@@ -548,7 +465,7 @@ export default function Editor() {
       }
     }
 
-    // ---------- MULTI-DRAG ----------
+    // Multi-drag support
     if (
       selectedItemIds.has(itemId) &&
       (snappedUpdates.x !== undefined || snappedUpdates.y !== undefined)
@@ -579,10 +496,9 @@ export default function Editor() {
       }
     }
 
-    // ---------- SINGLE ITEM UPDATE ----------
+    // Single item update
     editorStore.updateItem(projectId, itemId, snappedUpdates);
   };
-
 
   const handleSelectItem = (itemId: number, e?: Konva.KonvaEventObject<MouseEvent>) => {
     const isCtrl = e?.evt.ctrlKey || e?.evt.metaKey;
@@ -597,7 +513,6 @@ export default function Editor() {
       return next;
     });
 
-    // Clear connections if not adding to selection (exclusive select)
     if (!isCtrl) {
       setSelectedConnectionIds(new Set());
     }
@@ -608,9 +523,7 @@ export default function Editor() {
     setSelectedConnectionIds(new Set());
   };
 
-  // --- Connection Handlers ---
-  // Add this function to cancel connection drawing
-
+  // Connection Handlers
   const handleGripMouseDown = (
     itemId: number,
     gripIndex: number,
@@ -633,12 +546,9 @@ export default function Editor() {
         waypoints: tempConnection.waypoints,
       });
 
-
-
       setIsDrawingConnection(false);
       setTempConnection(null);
       setSelectedConnectionIds(new Set([newConnection.id]));
-
       return;
     }
 
@@ -665,10 +575,8 @@ export default function Editor() {
   const handleStageMouseMove = () => {
     if (isDrawingConnection && tempConnection) {
       const stage = stageRef.current;
-
       if (stage) {
         const pointer = stage.getRelativePointerPosition();
-
         if (pointer) {
           setTempConnection((prev: any) =>
             prev
@@ -685,17 +593,15 @@ export default function Editor() {
   };
 
   const handleStageMouseUp = () => {
-    // In manual mode we don't auto-cancel on mouse up; user either clicks
-    // empty canvas to add waypoints or a grip to finish the connection.
+    // Manual connection drawing - no auto-cancel
   };
-  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
 
+  // Handle stage resize
   useEffect(() => {
     if (!containerRef.current) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
       const rect = entries[0].contentRect;
-
       setStageSize({
         width: rect.width,
         height: rect.height,
@@ -703,29 +609,23 @@ export default function Editor() {
     });
 
     resizeObserver.observe(containerRef.current);
-
     return () => resizeObserver.disconnect();
   }, []);
-  const log = (...args: any[]) =>
-    console.log("%c[EDITOR]", "color:#22c55e", ...args);
 
-  // ---------- Initialize editor from editor store ----------
-  // Sync store with history
-  useEffect(() => {
-    if (!projectId) return;
-
-    if (!editorStore.getEditorState(projectId)) {
-      editorStore.initEditor(projectId);
+  // Undo/Redo handlers
+  const handleUndo = () => {
+    if (projectId && canUndo) {
+      editorStore.undo(projectId);
     }
-  }, [projectId, editorStore]);
+  };
 
-  useEffect(() => {
-    if (currentState && projectId) {
-      setCanvasState(currentState);
+  const handleRedo = () => {
+    if (projectId && canRedo) {
+      editorStore.redo(projectId);
     }
-  }, [currentState, projectId, setCanvasState]);
-  // -------------------------------------------------------------------------------
-  // -------------------------------------------------------------------------------
+  };
+
+  // Grid Layer Component
   const GridLayer = React.memo(({
     width,
     height,
@@ -749,9 +649,6 @@ export default function Editor() {
           sceneFunc={(context: CanvasRenderingContext2D, shape: Konva.Shape) => {
             context.beginPath();
 
-            // These bounds match your previous logic (-5000 to +5000)
-            // Ideally, you should calculate this based on the visible viewport,
-            // but this is much faster than the array method even with large bounds.
             const startX = -5000;
             const endX = width + 5000;
             const startY = -5000;
@@ -769,7 +666,6 @@ export default function Editor() {
               context.lineTo(endX, y);
             }
 
-            // Konva specific method to apply styles (stroke, color, etc.)
             context.fillStrokeShape(shape);
           }}
         />
@@ -828,17 +724,16 @@ export default function Editor() {
                 ) as string[]
               }
             >
-              <DropdownItem key="undo" onPress={undo}>
+              <DropdownItem key="undo" onPress={handleUndo}>
                 Undo (Ctrl+Z)
               </DropdownItem>
-              <DropdownItem key="redo" onPress={redo}>
+              <DropdownItem key="redo" onPress={handleRedo}>
                 Redo (Ctrl+Y)
               </DropdownItem>
               <DropdownItem
                 key="delete"
                 onPress={() => {
                   if (selectedItemIds.size > 0 || selectedConnectionIds.size > 0) {
-                    // Trigger delete logic (reuse shortcut handler logic or verify functionality)
                     if (projectId && selectedItemIds.size > 0) editorStore.batchDeleteItems(projectId, Array.from(selectedItemIds));
                     if (projectId && selectedConnectionIds.size > 0) editorStore.batchRemoveConnections(projectId, Array.from(selectedConnectionIds));
                     setSelectedItemIds(new Set());
@@ -957,9 +852,6 @@ export default function Editor() {
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
         >
-
-
-
           <Stage
             ref={stageRef}
             draggable
@@ -971,7 +863,6 @@ export default function Editor() {
             x={stagePos.x}
             y={stagePos.y}
             onDragEnd={(e) => {
-              // Update stage position state when panning finishes
               if (e.target === stageRef.current) {
                 setStagePos({ x: e.target.x(), y: e.target.y() });
               }
@@ -979,13 +870,10 @@ export default function Editor() {
             onMouseDown={(e) => {
               const clickedOnEmpty = e.target === e.target.getStage();
 
-              // While drawing a connection, clicking on empty canvas creates a waypoint
               if (clickedOnEmpty && isDrawingConnection && tempConnection) {
                 const stage = stageRef.current;
-
                 if (stage) {
                   const pointer = stage.getRelativePointerPosition();
-
                   if (pointer) {
                     setTempConnection((prev: any) =>
                       prev
@@ -1000,21 +888,17 @@ export default function Editor() {
                     );
                   }
                 }
-
                 return;
               }
 
-              // Otherwise, click on empty stage deselects
               if (clickedOnEmpty) {
                 handleClearSelection();
               }
             }}
             onMouseMove={() => {
               const stage = stageRef.current;
-
               if (stage) {
                 const pointer = stage.getRelativePointerPosition();
-
                 if (pointer)
                   setCursorPos({
                     x: Math.round(pointer.x),
