@@ -107,7 +107,10 @@ export default function Editor() {
 
   // Export diagram states
   const currentState = projectId ? editorStore.getEditorState(projectId) : null;
-  const droppedItems = canvasState?.items || [];
+  const droppedItems = projectId
+  ? editorStore.getItemsInOrder(projectId)
+  : canvasState?.items || [];
+
   const connections = canvasState?.connections || [];
 
   const [showExportModal, setShowExportModal] = useState(false);
@@ -219,6 +222,13 @@ export default function Editor() {
     () => calculateManualPathsWithBridges(connections, droppedItems),
     [connections, droppedItems]
   );
+  const handleCancelDrawing = () => {
+    if (isDrawingConnection) {
+      setIsDrawingConnection(false);
+      setTempConnection(null);
+    }
+  };
+
 
   // --- Event Listeners ---
 
@@ -262,9 +272,15 @@ export default function Editor() {
           setSelectedItemIds(new Set());
         }
       },
+    }, {
+    key: "escape",
+    label: "Cancel Drawing",
+    display: "Esc",
+    requireCtrl: false,
+    handler: handleCancelDrawing,
     },
   ];
-
+ 
   // Handle keyboard events (Delete key)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -300,6 +316,7 @@ export default function Editor() {
     projectId,
     editorStore,
     setCanvasState,
+    isDrawingConnection,
   ]);
 
 
@@ -510,7 +527,8 @@ export default function Editor() {
   };
 
   // --- Connection Handlers ---
-
+  // Add this function to cancel connection drawing
+  
   const handleGripMouseDown = (
     itemId: number,
     gripIndex: number,
@@ -1082,7 +1100,7 @@ export default function Editor() {
                 </span>
                 <div className="w-px h-3 bg-white/20" />
                 <span className="text-white/80 text-xs">
-                  Click empty space to add corner • Click target point to finish
+                  Click empty space to add corner • Click target point to finish • Press Esc to cancel                
                 </span>
               </div>
             </div>
