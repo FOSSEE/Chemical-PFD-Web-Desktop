@@ -1,6 +1,5 @@
 import os
-from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtCore import Qt
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QLineEdit, QTextEdit, QFileDialog
@@ -8,7 +7,7 @@ from PyQt5.QtWidgets import (
 
 from src.api_client import post_component
 import src.app_state as app_state
-
+from src.grip_editor_dialog import GripEditorDialog
 
 class AddSymbolDialog(QDialog):
     def __init__(self, parent=None):
@@ -17,6 +16,7 @@ class AddSymbolDialog(QDialog):
         self.setWindowTitle("Add New Symbol")
         self.setModal(True)
         self.setMinimumWidth(480)
+        self.setMinimumHeight(800)
 
         # Modern rounded popup
         self.setStyleSheet("""
@@ -61,8 +61,17 @@ class AddSymbolDialog(QDialog):
         self.svg_path = None
         self.png_path = None
 
-        layout = QVBoxLayout(self)
+        outer_layout = QVBoxLayout(self)
+
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        outer_layout.addWidget(scroll)
+
+        container = QtWidgets.QWidget()
+        layout = QVBoxLayout(container)
         layout.setSpacing(14)
+
+        scroll.setWidget(container)
 
         # Header
         title = QLabel("Add New Symbol")
@@ -92,6 +101,12 @@ class AddSymbolDialog(QDialog):
         self.svg_btn.clicked.connect(self.pick_svg)
         layout.addWidget(self.svg_btn)
 
+        # Grip Editor
+        self.edit_grips_btn = QPushButton("Open Grip Editor")
+        self.edit_grips_btn.setObjectName("fileBtn")
+        self.edit_grips_btn.clicked.connect(self.open_grip_editor)
+        layout.addWidget(self.edit_grips_btn)
+
         layout.addWidget(QLabel("PNG File"))
         self.png_btn = QPushButton("Choose PNG File")
         self.png_btn.setObjectName("fileBtn")
@@ -114,7 +129,6 @@ class AddSymbolDialog(QDialog):
 
         layout.addLayout(btn_row)
 
-    # Small helper to generate input rows
     def _line(self, layout, placeholder):
         lbl = QLabel(placeholder)
         layout.addWidget(lbl)
@@ -163,3 +177,13 @@ class AddSymbolDialog(QDialog):
             self.accept()
         else:
             QtWidgets.QMessageBox.critical(self, "Error", "Failed to add component.")
+
+    def open_grip_editor(self):
+        if not self.svg_path:
+            QtWidgets.QMessageBox.warning(self, "No SVG", "Please select an SVG file first.")
+            return
+
+        dlg = GripEditorDialog(self.svg_path, self)
+        if dlg.exec_() == QDialog.Accepted:
+            grips_json = dlg.get_grips_json()
+            self.grips.setText(grips_json)

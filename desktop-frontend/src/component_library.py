@@ -79,7 +79,7 @@ class ComponentButton(QToolButton):
 
         # BADGE for added components
         if component_data.get("is_new"):
-            print(f"[BADGE] Creating NEW badge for: {component_data['name']} (s_no: {component_data.get('s_no')})")
+            # print(f"[BADGE] Creating NEW badge for: {component_data['name']} (s_no: {component_data.get('s_no')})")
             badge = QLabel("NEW", self)
             badge.setStyleSheet("""
                 background-color: #3b82f6;
@@ -212,7 +212,7 @@ class ComponentLibrary(QWidget):
         if not os.path.exists(csv_path):
             return
         
-        print(f"[LOAD] new_snos set contains: {self.new_snos}")
+        # print(f"[LOAD] new_snos set contains: {self.new_snos}")
         
         try:
             with open(csv_path, 'r', encoding='utf-8-sig') as file:
@@ -222,8 +222,8 @@ class ComponentLibrary(QWidget):
                         s_no = row.get("s_no", "").strip()
                         is_new = s_no in self.new_snos
                         
-                        if is_new:
-                            print(f"[LOAD] Found NEW component: {row['name']} with s_no={s_no}")
+                        # if is_new:
+                        #     print(f"[LOAD] Found NEW component: {row['name']} with s_no={s_no}")
                         
                         self.component_data.append({
                             "s_no": s_no,
@@ -267,7 +267,7 @@ class ComponentLibrary(QWidget):
                 if not s_no or s_no in existing:
                     continue
 
-                print(f"[SYNC] NEW component detected: s_no={s_no}, name={comp.get('name')}")
+                # print(f"[SYNC] NEW component detected: s_no={s_no}, name={comp.get('name')}")
 
                 parent = comp.get("parent", "").strip()
                 name = comp.get("name", "").strip()
@@ -299,7 +299,7 @@ class ComponentLibrary(QWidget):
                         if res.status_code == 200:
                             with open(png_path, "wb") as f:
                                 f.write(res.content)
-                            print(f"[SYNC] PNG saved → {png_path}")
+                            # print(f"[SYNC] PNG saved → {png_path}")
                         else:
                             print("[SYNC] PNG download failed:", png_url)
                     except Exception as e:
@@ -318,13 +318,13 @@ class ComponentLibrary(QWidget):
                         if res.status_code == 200:
                             with open(svg_path, "wb") as f:
                                 f.write(res.content)
-                            print(f"[SYNC] SVG saved → {svg_path}")
+                            # print(f"[SYNC] SVG saved → {svg_path}")
                     except Exception as e:
                         print("[SYNC ERROR] SVG failed:", e)
 
                 # Add to new_snos set
                 self.new_snos.add(s_no)
-                print(f"[SYNC] Added s_no={s_no} to new_snos set")
+                # print(f"[SYNC] Added s_no={s_no} to new_snos set")
                 
                 # CSV row with exact backend filenames
                 new_rows.append({   
@@ -355,8 +355,8 @@ class ComponentLibrary(QWidget):
                     for r in new_rows:
                         writer.writerow(r)
 
-                print(f"[SYNC] Added {len(new_rows)} new components to CSV.")
-                print(f"[SYNC] new_snos now contains: {self.new_snos}")
+                # print(f"[SYNC] Added {len(new_rows)} new components to CSV.")
+                # print(f"[SYNC] new_snos now contains: {self.new_snos}")
 
         except Exception as e:
             print("[SYNC CRITICAL ERROR]", e)
