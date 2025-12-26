@@ -1,5 +1,6 @@
 import os
 import csv
+import json
 import requests
 import src.app_state as app_state
 from src import api_client
@@ -126,7 +127,17 @@ class ComponentButton(QToolButton):
         
         drag = QDrag(self)
         mimeData = QMimeData()
-        mimeData.setText(self.component_data['object'])
+        # Pass complete component data as JSON (including s_no)
+        component_json = json.dumps({
+            "s_no": self.component_data.get('s_no', ''),
+            "object": self.component_data.get('object', ''),
+            "name": self.component_data.get('name', ''),
+            "parent": self.component_data.get('parent', ''),
+            "legend": self.component_data.get('legend', ''),
+            "suffix": self.component_data.get('suffix', ''),
+            "grips": self.component_data.get('grips', '')
+        })
+        mimeData.setText(component_json)
         drag.setMimeData(mimeData)
         
         if not self.icon().isNull():

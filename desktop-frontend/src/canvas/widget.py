@@ -57,9 +57,29 @@ class CanvasWidget(QWidget):
             event.ignore()
 
     def dropEvent(self, event):
+        import json
         pos = event.pos()
         text = event.mimeData().text()
-        self.create_component_command(text, pos)
+        
+        # Parse JSON component data
+        try:
+            component_data = json.loads(text)
+            object_name = component_data.get('object', text)
+            s_no = component_data.get('s_no', '')
+            legend = component_data.get('legend', '')
+            suffix = component_data.get('suffix', '')
+        except (json.JSONDecodeError, ValueError):
+            # Fallback for old format (plain text)
+            object_name = text
+            s_no = ''
+            legend = ''
+            suffix = ''
+        
+        self.create_component_command(object_name, pos, component_data={
+            's_no': s_no,
+            'legend': legend,
+            'suffix': suffix
+        })
         event.acceptProposedAction()
 
     def deselect_all(self):
@@ -279,11 +299,17 @@ class CanvasWidget(QWidget):
         painter.draw_active_connection(qp, self.active_connection)
 
     # ---------------------- COMPONENT CREATION ----------------------
-    def create_component_command(self, text, pos):
+    def create_component_command(self, text, pos, component_data=None):
+        component_data = component_data or {}
+        
         svg = resources.find_svg_path(text, self.base_dir)
         config = resources.get_component_config_by_name(text, self.component_config) or {}
         # Important: Copy config to prevent shared state between same components
         config = config.copy()
+        
+        # Add s_no to config (CRITICAL for grip matching!)
+        config["s_no"] = component_data.get('s_no', '')
+        config["object"] = text
         
         # Ensure name is set
         if "name" not in config:
@@ -293,10 +319,17 @@ class CanvasWidget(QWidget):
         key = resources.clean_string(text)
         label_text = text
 
+        # Use component_data legend/suffix if available
+        legend = component_data.get('legend', '')
+        suffix = component_data.get('suffix', '')
+
         if key in self.label_data:
             d = self.label_data[key]
             d["count"] += 1
-            label_text = f"{d['legend']}{d['count']:02d}{d['suffix']}"
+            # Override with CSV data if available
+            legend = legend or d['legend']
+            suffix = suffix or d['suffix']
+            label_text = f"{legend}{d['count']:02d}{suffix}"
 
         config["default_label"] = label_text
 

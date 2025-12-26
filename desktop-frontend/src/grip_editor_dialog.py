@@ -1,90 +1,93 @@
+import os
 import json
 from PyQt5 import QtWidgets, QtGui, QtSvg, QtCore
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import ( QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-    QPushButton)
+from PyQt5.QtWidgets import (
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel,
+    QPushButton, QLineEdit, QTextEdit, QFileDialog
+)
+
+from src.api_client import post_component
+import src.app_state as app_state
 
 class DraggableGripItem(QtWidgets.QGraphicsEllipseItem):
-    """Draggable grip with proper text label that does not break hit detection."""
-
-    def __init__(self, x, y, side, index, editor, radius=10):
-        super().__init__(-radius, -radius, radius*2, radius*2)
-
+    """A grip point that can be dragged, deleted, and shows its number"""
+    
+    def __init__(self, x, y, side, index, editor, radius=4):
+        super().__init__(x - radius, y - radius, 2*radius, 2*radius)
         self.editor = editor
         self.index = index
         self.side = side
         self.radius = radius
-
-        # Move item center to (x,y)
-        self.setPos(x, y)
-
-        # Circle styling
-        self.setPen(QtGui.QPen(Qt.white, 2))
-        self.setBrush(QtGui.QBrush(QtGui.QColor("#ef4444")))
+        self.center_x = x
+        self.center_y = y
+        
+        # Style - red circle with white border for better visibility
+        self.setPen(QtGui.QPen(Qt.NoPen))
+        self.setBrush(QtGui.QBrush(QtGui.QColor("cyan")))  # Bright red
+        self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable)
+        self.setFlag(QtWidgets.QGraphicsItem.ItemSendsGeometryChanges)
         self.setZValue(10)
-        self.setFlag(self.ItemIsMovable)
-        self.setFlag(self.ItemSendsGeometryChanges)
         self.setCursor(Qt.OpenHandCursor)
-
-        # -------- LABEL (REAL QGraphicsTextItem) --------
-        self.label = QtWidgets.QGraphicsTextItem(str(index + 1), self)
-        self.label.setDefaultTextColor(Qt.black)
-
-        font = QtGui.QFont()
-        font.setPixelSize(11)
-        font.setBold(True)
-        self.label.setFont(font)
-
-        # Add white outline
-        outline = QtWidgets.QGraphicsDropShadowEffect()
-        outline.setColor(Qt.white)
-        outline.setBlurRadius(5)
-        outline.setOffset(0, 0)
-        self.label.setGraphicsEffect(outline)
-
-        self.center_label()
-
-    def center_label(self):
-        """Centers the label inside the circle using item coordinates."""
-        rect = self.label.boundingRect()
-        self.label.setPos(
-            -rect.width() / 2,
-            -rect.height() / 2
-        )
-
-    # ----------- Interaction ----------------
+        
+        # Number label with better visibility
+        # self.label = QtWidgets.QGraphicsTextItem(str(index + 1), self)
+        # self.label.setDefaultTextColor(Qt.white)
+        # font = self.label.font()
+        # font.setPixelSize(12)
+        # font.setBold(True)
+        # self.label.setFont(font)
+        
+        # # Add text outline/shadow for better visibility
+        # effect = QtWidgets.QGraphicsDropShadowEffect()
+        # effect.setBlurRadius(2)
+        # effect.setColor(QtGui.QColor(0, 0, 0, 180))
+        # effect.setOffset(0, 0)
+        # self.label.setGraphicsEffect(effect)
+        
+        # # Center the text
+        # text_rect = self.label.boundingRect()
+        # self.label.setPos(
+        #     radius - text_rect.width() / 2,
+        #     radius - text_rect.height() / 2
+        # )
+        
     def mousePressEvent(self, event):
-        # Right-click OR Ctrl/Cmd-click → delete
+        # Right-click OR Ctrl/Cmd+Click to delete (Mac trackpad friendly)
         if event.button() == Qt.RightButton or (
             event.button() == Qt.LeftButton and 
             event.modifiers() & (Qt.ControlModifier | Qt.MetaModifier)
         ):
             self.editor.delete_grip(self.index)
             event.accept()
-            return
-
-        self.setCursor(Qt.ClosedHandCursor)
-        super().mousePressEvent(event)
-
+        else:
+            self.setCursor(Qt.ClosedHandCursor)
+            super().mousePressEvent(event)
+    
     def mouseReleaseEvent(self, event):
         self.setCursor(Qt.OpenHandCursor)
         super().mouseReleaseEvent(event)
-
+    
     def itemChange(self, change, value):
-        if change == self.ItemPositionChange:
+        if change == QtWidgets.QGraphicsItem.ItemPositionChange:
+            # Update the stored coordinates when moved
             new_pos = value
-            x = new_pos.x()
-            y = new_pos.y()
-
-            # auto update side
+            self.center_x = new_pos.x() + self.radius
+            self.center_y = new_pos.y() + self.radius
+            
+            # Auto-detect nearest edge
             if self.editor.auto_detect_edge:
-                self.side = self.editor.detect_nearest_edge(x, y)
-
+                self.side = self.editor.detect_nearest_edge(self.center_x, self.center_y)
+            
+            # Update in editor's points list
             if 0 <= self.index < len(self.editor.points):
-                self.editor.points[self.index] = {"x": x, "y": y, "side": self.side}
-
+                self.editor.points[self.index] = {
+                    "x": self.center_x,
+                    "y": self.center_y,
+                    "side": self.side
+                }
+        
         return super().itemChange(change, value)
-
 
 class GripEditorDialog(QDialog):
     def __init__(self, svg_path, parent=None):
@@ -109,34 +112,34 @@ class GripEditorDialog(QDialog):
         help_menu = menu_bar.addMenu("Help")
 
         help_text = (
-            "GRIP EDITOR CONTROLS\n\n"
+            "🎯 GRIP EDITOR CONTROLS\n\n"
             
-            "Adding Grips\n"
+            "📌 Adding Grips\n"
             "  • Left Click → Add new grip\n"
             "  • Auto-detects nearest edge (unless manual side selected)\n\n"
             
-            "Editing Grips\n"
+            "✏️ Editing Grips\n"
             "  • Drag (Left Click + Move) → Move grip\n"
             "  • Right Click → Delete grip\n"
             "  • Ctrl/Cmd + Left Click → Delete grip (Mac trackpad)\n"
             "  • Side updates automatically during drag when Auto mode is enabled\n\n"
             
-            "Zoom Controls\n"
+            "🔍 Zoom Controls\n"
             "  • Mouse Wheel / Trackpad Pinch → Zoom in/out\n"
             "  • Windows/Linux: Ctrl + '+'  /  Ctrl + '-'\n"
             "  • macOS: Cmd + '+'  /  Cmd + '-'\n"
             "  • Ctrl/Cmd + 0 → Reset zoom\n\n"
             
-            "Panning the Canvas\n"
+            "🌍 Panning the Canvas\n"
             "  • macOS Trackpad: Two-finger drag\n"
             "  • Windows/Linux Mouse: Left-drag on empty area\n"
             "  • Middle-button drag (if available) also pans\n\n"
             
-            "Undo / Redo\n"
+            "⚡ Undo / Redo\n"
             "  • Ctrl/Cmd + Z → Undo\n"
             "  • Ctrl/Cmd + Shift + Z → Redo\n\n"
             
-            "Grip Features\n"
+            "📍 Grip Features\n"
             "  • Grips show a number for easy identification\n"
             "  • Automatic nearest-edge detection (Top / Right / Bottom / Left)\n"
             "  • Manual override available via dropdown\n"
@@ -449,5 +452,202 @@ class GripEditorDialog(QDialog):
     # JSON output
     # ------------------------------------------
     def get_grips_json(self):
-        import json
-        return json.dumps(self.points, indent=2)
+        """Convert absolute coordinates to percentages (0-100) relative to SVG bounds"""
+        bounds = self.svg_bounds
+        width = bounds.width()
+        height = bounds.height()
+        left = bounds.left()
+        top = bounds.top()
+        
+        # Convert to percentages
+        percentage_grips = []
+        for p in self.points:
+            x_percent = ((p["x"] - left) / width) * 100.0 if width > 0 else 0
+            y_percent = ((p["y"] - top) / height) * 100.0 if height > 0 else 0
+            
+            percentage_grips.append({
+                "x": round(x_percent, 2),
+                "y": round(y_percent, 2),
+                "side": p["side"]
+            })
+        
+        return json.dumps(percentage_grips, indent=2)
+
+class AddSymbolDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setWindowTitle("Add New Symbol")
+        self.setModal(True)
+        self.setMinimumWidth(480)
+        self.setMinimumHeight(800)
+
+        # Modern rounded popup
+        self.setStyleSheet("""
+            QDialog {
+                border-radius: 16px;
+                background-color: #ffffff;
+            }
+            QLabel {
+                font-size: 14px;
+                font-weight: 500;
+            }
+            QLineEdit, QTextEdit {
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                padding: 6px;
+                font-size: 14px;
+            }
+            QPushButton {
+                padding: 8px 18px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+            QPushButton#submitBtn {
+                background-color: #3b82f6;
+                color: white;
+            }
+            QPushButton#submitBtn:hover {
+                background-color: #2563eb;
+            }
+            QPushButton#cancelBtn {
+                background-color: #e5e7eb;
+            }
+            QPushButton#fileBtn {
+                background-color: #d1d5db;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 13px;
+            }
+        """)
+
+        self.svg_path = None
+        self.png_path = None
+
+        outer_layout = QVBoxLayout(self)
+
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        outer_layout.addWidget(scroll)
+
+        container = QtWidgets.QWidget()
+        layout = QVBoxLayout(container)
+        layout.setSpacing(14)
+
+        scroll.setWidget(container)
+
+        # Header
+        title = QLabel("Add New Symbol")
+        title.setStyleSheet("font-size: 20px; font-weight: 600; margin-bottom: 10px;")
+        layout.addWidget(title)
+
+        # --- Input Fields ---
+        self.sno = self._line(layout, "S No")
+        self.parent = self._line(layout, "Parent")
+        self.name = self._line(layout, "Name")
+        self.legend = self._line(layout, "Legend")
+        self.suffix = self._line(layout, "Suffix")
+        self.object = self._line(layout, "Object")
+
+        # Grips field
+        grips_label = QLabel("Grips (JSON)")
+        layout.addWidget(grips_label)
+
+        self.grips = QTextEdit()
+        self.grips.setPlaceholderText('[{"x":50,"y":100,"side":"top"}]')
+        layout.addWidget(self.grips)
+
+        # File pickers
+        layout.addWidget(QLabel("SVG File"))
+        self.svg_btn = QPushButton("Choose SVG File")
+        self.svg_btn.setObjectName("fileBtn")
+        self.svg_btn.clicked.connect(self.pick_svg)
+        layout.addWidget(self.svg_btn)
+
+        # Grip Editor
+        self.edit_grips_btn = QPushButton("Open Grip Editor")
+        self.edit_grips_btn.setObjectName("fileBtn")
+        self.edit_grips_btn.clicked.connect(self.open_grip_editor)
+        layout.addWidget(self.edit_grips_btn)
+
+        layout.addWidget(QLabel("PNG File"))
+        self.png_btn = QPushButton("Choose PNG File")
+        self.png_btn.setObjectName("fileBtn")
+        self.png_btn.clicked.connect(self.pick_png)
+        layout.addWidget(self.png_btn)
+
+        # Buttons
+        btn_row = QHBoxLayout()
+        btn_row.addStretch(1)
+
+        self.cancel_btn = QPushButton("Cancel")
+        self.cancel_btn.setObjectName("cancelBtn")
+        self.cancel_btn.clicked.connect(self.reject)
+        btn_row.addWidget(self.cancel_btn)
+
+        self.submit_btn = QPushButton("Submit")
+        self.submit_btn.setObjectName("submitBtn")
+        self.submit_btn.clicked.connect(self.submit)
+        btn_row.addWidget(self.submit_btn)
+
+        layout.addLayout(btn_row)
+
+    def _line(self, layout, placeholder):
+        lbl = QLabel(placeholder)
+        layout.addWidget(lbl)
+        line = QLineEdit()
+        line.setPlaceholderText(placeholder)
+        layout.addWidget(line)
+        return line
+
+    def pick_svg(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Select SVG", "", "SVG Files (*.svg)")
+        if path:
+            self.svg_path = path
+            self.svg_btn.setText(os.path.basename(path))
+
+    def pick_png(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Select PNG", "", "PNG Files (*.png)")
+        if path:
+            self.png_path = path
+            self.png_btn.setText(os.path.basename(path))
+
+    def submit(self):
+        if not all([self.sno.text(), self.name.text(), self.object.text()]):
+            QtWidgets.QMessageBox.warning(self, "Missing Fields", "S No, Name & Object are required.")
+            return
+
+        data = {
+            "s_no": self.sno.text(),
+            "parent": self.parent.text(),
+            "name": self.name.text(),
+            "legend": self.legend.text(),
+            "suffix": self.suffix.text(),
+            "object": self.object.text(),
+            "grips": self.grips.toPlainText(),
+        }
+
+        files = {}
+        if self.svg_path:
+            files["svg"] = open(self.svg_path, "rb")
+        if self.png_path:
+            files["png"] = open(self.png_path, "rb")
+
+        response = post_component(data, files)
+
+        if hasattr(response, "status_code") and response.status_code in (200, 201):
+            QtWidgets.QMessageBox.information(self, "Success", "Symbol added successfully.")
+            self.accept()
+        else:
+            QtWidgets.QMessageBox.critical(self, "Error", "Failed to add component.")
+
+    def open_grip_editor(self):
+        if not self.svg_path:
+            QtWidgets.QMessageBox.warning(self, "No SVG", "Please select an SVG file first.")
+            return
+
+        dlg = GripEditorDialog(self.svg_path, self)
+        if dlg.exec_() == QDialog.Accepted:
+            grips_json = dlg.get_grips_json()
+            self.grips.setText(grips_json)
