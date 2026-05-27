@@ -523,8 +523,8 @@ def draw_equipment_table(painter, canvas, page_rect, start_y):
 
 def draw_title_block(painter, rect, metadata):
     """Draw a small footer/title block in the bottom-right corner."""
-    block_width = min(360, max(250, rect.width() * 0.34))
-    block_height = 92
+    block_width = min(480, max(320, rect.width() * 0.4))
+    block_height = 140
     margin = 24
 
     x = rect.width() - block_width - margin
@@ -538,14 +538,14 @@ def draw_title_block(painter, rect, metadata):
         painter.drawRoundedRect(block_rect, 8, 8)
 
         label_font = painter.font()
-        label_font.setPointSize(8)
+        label_font.setPointSize(11)
         label_font.setBold(True)
         painter.setFont(label_font)
         painter.setPen(QColor("#6B4A3B"))
 
-        line_gap = 24
-        text_x = block_rect.left() + 14
-        label_y = block_rect.top() + 22
+        line_gap = 34
+        text_x = block_rect.left() + 20
+        label_y = block_rect.top() + 30
 
         rows = [
             ("Project Name", metadata.get("project_name", "Untitled Project")),
@@ -554,20 +554,20 @@ def draw_title_block(painter, rect, metadata):
         ]
 
         value_font = painter.font()
-        value_font.setPointSize(9)
+        value_font.setPointSize(12)
         value_font.setBold(False)
 
         for index, (label, value) in enumerate(rows):
             row_y = label_y + (index * line_gap)
             painter.setFont(label_font)
-            painter.drawText(QRectF(text_x, row_y - 12, 86, 16), Qt.AlignLeft | Qt.AlignVCenter, f"{label}:")
+            painter.drawText(QRectF(text_x, row_y - 14, 110, 20), Qt.AlignLeft | Qt.AlignVCenter, f"{label}:")
             painter.setFont(value_font)
-            painter.drawText(QRectF(text_x + 90, row_y - 12, block_width - 104, 16), Qt.AlignLeft | Qt.AlignVCenter, str(value))
+            painter.drawText(QRectF(text_x + 120, row_y - 14, block_width - 140, 20), Qt.AlignLeft | Qt.AlignVCenter, str(value))
     finally:
         painter.restore()
 
 
-def compose_export_image(canvas, scale=3.0, footer_height=124):
+def compose_export_image(canvas, scale=3.0, footer_height=190):
     """Render the canvas and append a footer/title block area."""
     rect = get_content_rect(canvas)
     base_image = render_to_image(canvas, rect, scale=scale)
