@@ -48,10 +48,11 @@ interface EditorStore {
   ) => CanvasItem | undefined;
 
   updateItem: (
-    editorId: string,
-    itemId: number,
-    patch: Partial<CanvasItem>,
-  ) => void;
+  editorId: string,
+  itemId: number,
+  patch: Partial<CanvasItem>,
+  recordHistory?: boolean,
+) => void;
 
   deleteItem: (editorId: string, itemId: number) => void;
 
@@ -284,31 +285,40 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
     return newItem;
   },
 
-  updateItem: (editorId, itemId, patch) => {
-    set((s) => {
-      const ed = s.editors[editorId];
+  updateItem: (
+  editorId,
+  itemId,
+  patch,
+  recordHistory = true,
+) => {
+  set((s) => {
+    const ed = s.editors[editorId];
 
-      if (!ed) return s;
+    if (!ed) return s;
 
-      // --- RECORD HISTORY ---
-      const snapshot = createSnapshot(ed);
-      // ----------------------
+    const snapshot = recordHistory
+      ? createSnapshot(ed)
+      : null;
 
-      return {
-        editors: {
-          ...s.editors,
-          [editorId]: {
-            ...ed,
-            items: ed.items.map((it) =>
-              it.id === itemId ? { ...it, ...patch } : it,
-            ),
-            past: [...ed.past, snapshot],
-            future: [],
-          },
+    return {
+      editors: {
+        ...s.editors,
+        [editorId]: {
+          ...ed,
+          items: ed.items.map((it) =>
+            it.id === itemId ? { ...it, ...patch } : it,
+          ),
+          past: snapshot
+            ? [...ed.past, snapshot]
+            : ed.past,
+          future: recordHistory
+            ? []
+            : ed.future,
         },
-      };
-    });
-  },
+      },
+    };
+  });
+},
 
   deleteItem: (editorId, itemId) => {
     set((s) => {

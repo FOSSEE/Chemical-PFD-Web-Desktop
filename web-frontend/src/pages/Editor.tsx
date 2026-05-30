@@ -1340,8 +1340,17 @@ export default function Editor() {
       }
     }
 
-    // Single item update
-    editorStore.updateItem(projectId, itemId, snappedUpdates);
+    // Skip history entry for image metadata sync
+const isMetadataSync =
+  "naturalWidth" in snappedUpdates ||
+  "naturalHeight" in snappedUpdates;
+
+editorStore.updateItem(
+  projectId,
+  itemId,
+  snappedUpdates,
+  !isMetadataSync,
+);
 
     // If the component moved, reset connection waypoints so routing recalculates
     if (updates.x !== undefined || updates.y !== undefined) {
