@@ -335,7 +335,9 @@ class CanvasScreen(QMainWindow):
                     background-color: #1e293b; color: #cbd5e1;
                     border: 1px solid #334155; border-bottom: none;
                     border-top-left-radius: 6px; border-top-right-radius: 6px;
-                    padding: 8px 16px; margin-right: 2px; font-size: 13px;
+                    padding: 10px 16px; margin-right: 2px; font-size: 13px;
+                    min-height: 28px;
+                    font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Segoe UI";
                 }
                 QTabBar::tab:selected {
                     background-color: #3b82f6; color: #ffffff;
@@ -353,7 +355,9 @@ class CanvasScreen(QMainWindow):
                     background-color: #f4e8dc; color: #3A2A20;
                     border: 1px solid #C97B5A; border-bottom: none;
                     border-top-left-radius: 6px; border-top-right-radius: 6px;
-                    padding: 8px 16px; margin-right: 2px; font-size: 13px;
+                    padding: 10px 16px; margin-right: 2px; font-size: 13px;
+                    min-height: 28px;
+                    font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Segoe UI";
                 }
                 QTabBar::tab:selected {
                     background-color: #C97B5A; color: #ffffff;

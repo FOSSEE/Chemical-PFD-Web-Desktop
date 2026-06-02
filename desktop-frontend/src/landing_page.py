@@ -23,7 +23,7 @@ class ActionCard(QFrame):
 
         self.setObjectName("actionCard")
         self.setCursor(Qt.PointingHandCursor)
-        self.setFixedSize(240, 140)
+        self.setMinimumSize(240, 170)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
@@ -106,18 +106,6 @@ class RecentProjectItem(QWidget):
         self.edit_btn.setObjectName("recentActionEdit")
         self.edit_btn.setAutoRaise(True)
         self.edit_btn.setFixedSize(54, 28)
-        self.edit_btn.setStyleSheet(
-            "QToolButton {"
-            "border: 1px solid #d9b39f;"
-            "border-radius: 10px;"
-            "background: rgba(255, 255, 255, 0.62);"
-            "color: #7a4d35;"
-            "font-size: 11px;"
-            "font-weight: 600;"
-            "padding: 2px 8px;"
-            "}"
-            "QToolButton:hover { background: rgba(255, 255, 255, 0.9); }"
-        )
         self.edit_btn.clicked.connect(lambda: self.edit_requested.emit(self.project_id))
         action_layout.addWidget(self.edit_btn)
 
@@ -127,18 +115,6 @@ class RecentProjectItem(QWidget):
         self.delete_btn.setObjectName("recentActionDelete")
         self.delete_btn.setAutoRaise(True)
         self.delete_btn.setFixedSize(62, 28)
-        self.delete_btn.setStyleSheet(
-            "QToolButton {"
-            "border: 1px solid #e1a8a0;"
-            "border-radius: 10px;"
-            "background: rgba(255, 244, 242, 0.92);"
-            "color: #a14d43;"
-            "font-size: 11px;"
-            "font-weight: 600;"
-            "padding: 2px 8px;"
-            "}"
-            "QToolButton:hover { background: rgba(255, 231, 228, 1); }"
-        )
         self.delete_btn.clicked.connect(lambda: self.delete_requested.emit(self.project_id))
         action_layout.addWidget(self.delete_btn)
 
