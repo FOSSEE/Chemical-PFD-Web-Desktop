@@ -23,6 +23,7 @@ Current test modules in this folder include:
 - `test_routing.py`: connection and pathfinding behavior
 - `test_component_widget.py`: component widget behavior
 - `test_component_library.py`: component library behavior
+- `test_component_resize.py`: component resizing and dimension logic
 - `test_canvas_resources.py`: canvas resource utility behavior
 - `test_api_client.py`: API client behavior
 - `test_export.py`: export metadata, image/PDF export, and report footer behavior
@@ -77,11 +78,11 @@ python -m unittest desktop-frontend-UnitTests.test_validation -v
 
 Successful runs should finish without failures and print `OK` at the end.
 
-For the export module specifically, the expected result is:
+For the full test suite, the expected result is:
 
-- 17 tests executed
+- over 50 tests executed (currently 58)
 - all assertions passing
-- output similar to `Ran 17 tests in ...` followed by `OK`
+- output similar to `Ran 58 tests in ...` followed by `OK`
 
 ## Notes and Limitations
 
