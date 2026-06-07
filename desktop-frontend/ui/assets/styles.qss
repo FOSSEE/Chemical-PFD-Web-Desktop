@@ -67,19 +67,19 @@ QLineEdit:focus, QTextEdit:focus {
 
 QScrollBar:vertical {
     border: none;
-    background: #f1f5f9;
-    width: 10px;
+    background: transparent;
+    width: 6px;
     margin: 0px;
 }
 
 QScrollBar::handle:vertical {
-    background: #cbd5e1;
-    min-height: 20px;
-    border-radius: 5px;
+    background: rgba(120, 120, 120, 0.35);
+    min-height: 24px;
+    border-radius: 3px;
 }
 
 QScrollBar::handle:vertical:hover {
-    background: #94a3b8;
+    background: rgba(120, 120, 120, 0.55);
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
@@ -88,23 +88,33 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 
 QScrollBar:horizontal {
     border: none;
-    background: #f1f5f9;
-    height: 10px;
+    background: transparent;
+    height: 6px;
     margin: 0px;
 }
 
 QScrollBar::handle:horizontal {
-    background: #cbd5e1;
-    min-width: 20px;
-    border-radius: 5px;
+    background: rgba(120, 120, 120, 0.35);
+    min-width: 24px;
+    border-radius: 3px;
 }
 
 QScrollBar::handle:horizontal:hover {
-    background: #94a3b8;
+    background: rgba(120, 120, 120, 0.55);
 }
 
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     width: 0px;
+}
+
+QWidget[theme="dark"] QScrollBar::handle:vertical,
+QWidget[theme="dark"] QScrollBar::handle:horizontal {
+    background: rgba(148, 163, 184, 0.35);
+}
+
+QWidget[theme="dark"] QScrollBar::handle:vertical:hover,
+QWidget[theme="dark"] QScrollBar::handle:horizontal:hover {
+    background: rgba(148, 163, 184, 0.6);
 }
 
 QWidget#scrollWidget {
@@ -175,6 +185,7 @@ QWidget[theme="light"] QFrame#actionCard:hover, QWidget QFrame#actionCard:hover 
 
 QLabel#cardIcon {
     font-size: 48px;
+    font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Segoe UI", sans-serif;
 }
 
 QWidget[theme="light"] QLabel#cardIcon, QWidget QLabel#cardIcon {
@@ -194,6 +205,11 @@ QWidget#recentContainer {
     padding: 4px;
 }
 
+QScrollArea#recentScroll,
+QScrollArea#recentScroll QWidget#qt_scrollarea_viewport {
+    background-color: transparent;
+}
+
 QWidget[theme="light"] QWidget#recentContainer, QWidget QWidget#recentContainer {
     background-color: transparent;
     border: none;
@@ -202,10 +218,11 @@ QWidget[theme="light"] QWidget#recentContainer, QWidget QWidget#recentContainer 
 QWidget#recentProjectItem {
     border-radius: 8px;
     margin: 2px 0px;
+    background-color: transparent;
 }
 
 QWidget[theme="light"] QWidget#recentProjectItem, QWidget QWidget#recentProjectItem {
-    background-color: #f4e8dc;
+    background-color: transparent;
     border: 1px solid #C97B5A;
 }
 
@@ -218,6 +235,11 @@ QWidget[theme="light"] QLabel#recentIcon, QWidget QLabel#recentIcon {
     color: #3A2A20;
 }
 
+QLabel#recentIcon {
+    font-size: 18px;
+    font-family: "Segoe UI Emoji", "Segoe UI Symbol", "Segoe UI", sans-serif;
+}
+
 QWidget[theme="light"] QLabel#recentName, QWidget QLabel#recentName {
     color: #3A2A20;
     font-weight: 600;
@@ -226,6 +248,38 @@ QWidget[theme="light"] QLabel#recentName, QWidget QLabel#recentName {
 QWidget[theme="light"] QLabel#recentTime, QWidget QLabel#recentTime {
     color: #7c5a45;
     font-size: 12px;
+}
+
+QToolButton#recentActionEdit,
+QToolButton#recentActionDelete {
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+}
+
+QWidget[theme="light"] QToolButton#recentActionEdit,
+QWidget QToolButton#recentActionEdit {
+    border: 1px solid #d9b39f;
+    background: rgba(255, 255, 255, 0.62);
+    color: #7a4d35;
+}
+
+QWidget[theme="light"] QToolButton#recentActionEdit:hover,
+QWidget QToolButton#recentActionEdit:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+QWidget[theme="light"] QToolButton#recentActionDelete,
+QWidget QToolButton#recentActionDelete {
+    border: 1px solid #e1a8a0;
+    background: rgba(255, 244, 242, 0.92);
+    color: #a14d43;
+}
+
+QWidget[theme="light"] QToolButton#recentActionDelete:hover,
+QWidget QToolButton#recentActionDelete:hover {
+    background: rgba(255, 231, 228, 1);
 }
 
 QWidget[theme="light"] QLabel#recentArrow, QWidget QLabel#recentArrow {
@@ -321,12 +375,12 @@ QWidget[theme="dark"] QWidget#recentContainer {
 }
 
 QWidget[theme="dark"] QWidget#recentProjectItem {
-    background-color: #1e293b;
+    background-color: transparent;
     border: 1px solid #334155;
 }
 
 QWidget[theme="dark"] QWidget#recentProjectItem:hover {
-    background-color: #2a3448;
+    background-color: transparent;
     border: 1px solid #3b82f6;
 }
 
@@ -342,6 +396,26 @@ QWidget[theme="dark"] QLabel#recentName {
 QWidget[theme="dark"] QLabel#recentTime {
     color: #94a3b8;
     font-size: 12px;
+}
+
+QWidget[theme="dark"] QToolButton#recentActionEdit {
+    border: 1px solid #475569;
+    background: rgba(148, 163, 184, 0.18);
+    color: #e2e8f0;
+}
+
+QWidget[theme="dark"] QToolButton#recentActionEdit:hover {
+    background: rgba(148, 163, 184, 0.3);
+}
+
+QWidget[theme="dark"] QToolButton#recentActionDelete {
+    border: 1px solid #7f1d1d;
+    background: rgba(239, 68, 68, 0.18);
+    color: #fecaca;
+}
+
+QWidget[theme="dark"] QToolButton#recentActionDelete:hover {
+    background: rgba(239, 68, 68, 0.28);
 }
 
 QWidget[theme="dark"] QLabel#recentArrow {

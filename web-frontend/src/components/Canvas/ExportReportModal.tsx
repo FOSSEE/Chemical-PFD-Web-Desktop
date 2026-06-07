@@ -22,10 +22,12 @@ import { TbFileSpreadsheet } from "react-icons/tb";
 import * as XLSX from "xlsx";
 
 import { useEditorStore } from "@/store/useEditorStore";
+import { getReportFooterHTML } from "@/utils/exportFooter";
 
 interface ExportReportModalProps {
   editorId: string;
   open: boolean;
+  projectName?: string;
   onClose: () => void;
 }
 
@@ -51,10 +53,15 @@ interface FormatOption {
 export const ExportReportModal: React.FC<ExportReportModalProps> = ({
   editorId,
   open,
+  projectName,
   onClose,
 }) => {
   const editorState = useEditorStore((s) => s.editors[editorId]);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("csv");
+
+  const createdBy = localStorage.getItem("username") || "Unknown User";
+  const dateStr = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const footerHTML = getReportFooterHTML(projectName || "Untitled Project", createdBy, dateStr);
 
   // Transform editor items to report items
   const items = useMemo(() => {
@@ -242,9 +249,13 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
             .stat-item { text-align: center; }
             .stat-value { font-size: 24px; font-weight: bold; color: #4F46E5; }
             .stat-label { font-size: 12px; color: #666; }
+            /* Title block table must not inherit outer table styles */
+            .title-block table { margin-top: 0; border-collapse: collapse; }
+            .title-block td { border: none !important; padding: 5px 0; }
             @media print {
               body { margin: 0; }
               .no-print { display: none; }
+              * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             }
           </style>
         </head>
@@ -264,11 +275,10 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
               <div class="stat-label">Unique Types</div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">${
-                items.filter(
-                  (i) => i.description && i.description !== "No description",
-                ).length
-              }</div>
+              <div class="stat-value">${items.filter(
+      (i) => i.description && i.description !== "No description",
+    ).length
+      }</div>
               <div class="stat-label">With Description</div>
             </div>
           </div>
@@ -284,8 +294,8 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
             </thead>
             <tbody>
               ${items
-                .map(
-                  (item) => `
+        .map(
+          (item) => `
                 <tr>
                   <td>${item.slNo}</td>
                   <td><strong>${item.tagNo}</strong></td>
@@ -293,10 +303,11 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
                   <td>${item.description}</td>
                 </tr>
               `,
-                )
-                .join("")}
+        )
+        .join("")}
             </tbody>
           </table>
+          ${footerHTML}
           <div class="footer">
             Total Items: ${items.length}
           </div>
@@ -362,6 +373,12 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
             th { background-color: #4F46E5; color: white; font-weight: 600; padding: 12px 10px; text-align: left; }
             td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
             .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 9pt; }
+            /* Title block must not inherit outer table styles */
+            .title-block table { margin-top: 0; border-collapse: collapse; }
+            .title-block td { border: none !important; padding: 5px 0; }
+            @media print {
+              * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            }
           </style>
         </head>
         <body>
@@ -380,11 +397,10 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
               <div class="meta-label">Equipment Types</div>
             </div>
             <div class="meta-item">
-              <div class="meta-value">${
-                items.filter(
-                  (i) => i.description && i.description !== "No description",
-                ).length
-              }</div>
+              <div class="meta-value">${items.filter(
+      (i) => i.description && i.description !== "No description",
+    ).length
+      }</div>
               <div class="meta-label">Documented Items</div>
             </div>
             <div class="meta-item">
@@ -404,8 +420,8 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
             </thead>
             <tbody>
               ${items
-                .map(
-                  (item) => `
+        .map(
+          (item) => `
                 <tr>
                   <td>${item.slNo}</td>
                   <td><strong>${item.tagNo}</strong></td>
@@ -413,11 +429,13 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
                   <td>${item.description}</td>
                 </tr>
               `,
-                )
-                .join("")}
+        )
+        .join("")}
             </tbody>
           </table>
           
+          ${footerHTML}
+
           <div class="footer">
             <p>Report ID: EQ-${new Date().getTime().toString().slice(-6)} | Page 1 of 1</p>
             <p>This is a system-generated report. For official use, please verify with the equipment database.</p>
@@ -532,11 +550,10 @@ export const ExportReportModal: React.FC<ExportReportModalProps> = ({
                   key={format.key}
                   isHoverable
                   isPressable
-                  className={`cursor-pointer transition-all ${
-                    exportFormat === format.key
+                  className={`cursor-pointer transition-all ${exportFormat === format.key
                       ? `ring-2 ring-blue-500 ${format.color} border-2 ${format.borderColor}`
                       : ""
-                  }`}
+                    }`}
                   onPress={() => handleFormatSelect(format.key)}
                 >
                   <CardBody className="p-3">

@@ -83,7 +83,11 @@ export interface CanvasItemImageProps {
   onSelect: (e?: KonvaEventObject<MouseEvent>) => void; // Strict typing
   onChange: (newAttrs: CanvasItem) => void;
   onDragEnd?: (item: CanvasItem) => void;
+  /** Called ONCE when the user finishes a resize gesture (mouseUp). Use this
+   *  to commit to the global store so only one undo snapshot is pushed. */
   onTransformEnd?: (item: CanvasItem) => void;
+  /** Current canvas zoom/scale — used to compute a zoom-aware minimum size. */
+  stageScale?: number;
   onGripMouseDown?: (
     itemId: number,
     gripIndex: number,

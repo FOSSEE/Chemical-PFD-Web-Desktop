@@ -85,8 +85,8 @@ class PDFReportGenerator:
         
         # --- Footer Title Block ---
         footer_height = 0.95 * inch
-        block_width = 3.25 * inch
-        block_height = 0.72 * inch
+        block_width = 3.9 * inch
+        block_height = 1.05 * inch
         block_right = A4[0] - 0.5 * inch
         block_left = block_right - block_width
         block_bottom = 0.4 * inch
@@ -96,10 +96,10 @@ class PDFReportGenerator:
         canvas.setFillColor(colors.HexColor('#FFF8F2'))
         canvas.roundRect(block_left, block_bottom, block_width, block_height, 8, stroke=1, fill=1)
 
-        label_x = block_left + 0.12 * inch
-        value_x = block_left + 1.02 * inch
-        row_y = block_top - 0.18 * inch
-        row_gap = 0.18 * inch
+        label_x = block_left + 0.16 * inch
+        value_x = block_left + 1.2 * inch
+        row_y = block_top - 0.26 * inch
+        row_gap = 0.26 * inch
 
         metadata = self.metadata or {}
         rows = [
@@ -108,13 +108,13 @@ class PDFReportGenerator:
             ("Date", metadata.get("date", datetime.datetime.now().strftime('%B %d, %Y'))),
         ]
 
-        canvas.setFont('Helvetica-Bold', 7.5)
+        canvas.setFont('Helvetica-Bold', 9)
         canvas.setFillColor(colors.HexColor('#6B4A3B'))
         for label, value in rows:
             canvas.drawString(label_x, row_y, f"{label}:")
-            canvas.setFont('Helvetica', 8)
+            canvas.setFont('Helvetica', 9.5)
             canvas.drawString(value_x, row_y, str(value))
-            canvas.setFont('Helvetica-Bold', 7.5)
+            canvas.setFont('Helvetica-Bold', 9)
             row_y -= row_gap
 
         canvas.setFont('Helvetica', 8)

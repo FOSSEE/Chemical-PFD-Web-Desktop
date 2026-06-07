@@ -76,13 +76,7 @@ import {
   importFromDiagramFile,
   migrateExportData,
 } from "@/utils/diagramExport";
-// import {
-//   getProject,
-//   saveProject,
-//   createProject,
-//   type SavedProject,
-//   convertToBackendFormat,
-// } from "@/utils/projectStorage";
+import { appendFooterToImage } from "@/utils/exportFooter";
 import {
   createProject,
   fetchProject,
@@ -619,7 +613,7 @@ export default function Editor() {
       tempStage.batchDraw();
 
       // Generate data URL from temp stage
-      const dataUrl = tempStage.toDataURL({
+      let dataUrl = tempStage.toDataURL({
         pixelRatio,
         mimeType,
         quality,
@@ -628,6 +622,13 @@ export default function Editor() {
       // Clean up temp stage
       tempStage.destroy();
       document.body.removeChild(tempContainer);
+
+      // Append Footer Block (mimicking PyQt title block)
+      const projectName = projectMetadata?.name || "Untitled Project";
+      const createdBy = localStorage.getItem("username") || "Unknown User";
+      const exportDate = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+      
+      dataUrl = await appendFooterToImage(dataUrl, projectName, createdBy, exportDate, backgroundFill, pixelRatio);
 
       /* =========================
      PDF EXPORT - FIXED
@@ -1355,8 +1356,17 @@ export default function Editor() {
       }
     }
 
-    // Single item update
-    editorStore.updateItem(projectId, itemId, snappedUpdates);
+    // Skip history entry for image metadata sync
+const isMetadataSync =
+  "naturalWidth" in snappedUpdates ||
+  "naturalHeight" in snappedUpdates;
+
+editorStore.updateItem(
+  projectId,
+  itemId,
+  snappedUpdates,
+  !isMetadataSync,
+);
 
     // If the component moved, reset connection waypoints so routing recalculates
     if (updates.x !== undefined || updates.y !== undefined) {
@@ -1370,6 +1380,34 @@ export default function Editor() {
         });
       });
     }
+  };
+
+  /**
+   * Called ONCE when the user finishes a resize gesture (Konva onTransformEnd).
+   * Writes the final dimensions to the store in a single atomic update so only
+   * ONE undo snapshot is pushed — mirroring the desktop ResizeCommand pattern.
+   * Also resets waypoints on connected pipes so they re-route around the new bounds.
+   */
+  const handleResizeEnd = (item: CanvasItem) => {
+    if (!projectId) return;
+
+    // Single atomic store write = single undo entry
+    editorStore.updateItem(projectId, item.id, {
+      x: item.x,
+      y: item.y,
+      width: item.width,
+      height: item.height,
+      rotation: item.rotation,
+    });
+
+    // Reset waypoints for all pipes attached to this component so they re-route
+    const relatedConnections = connections.filter(
+      (conn) => conn.sourceItemId === item.id || conn.targetItemId === item.id,
+    );
+
+    relatedConnections.forEach((conn) => {
+      editorStore.updateConnection(projectId, conn.id, { waypoints: [] });
+    });
   };
 
   const handleSelectItem = (
@@ -2101,6 +2139,7 @@ export default function Editor() {
                     isInvalid={isInvalid}
                     isSelected={selectedItemIds.has(item.id)}
                     item={item}
+                    stageScale={stageScale}
                     onChange={(newAttrs) =>
                       handleUpdateItem(newAttrs.id, newAttrs)
                     }
@@ -2108,6 +2147,7 @@ export default function Editor() {
                     onGripMouseEnter={handleGripMouseEnter}
                     onGripMouseLeave={handleGripMouseLeave}
                     onSelect={(e) => handleSelectItem(item.id, e)}
+                    onTransformEnd={handleResizeEnd}
                   />
                 );
               })}
@@ -2400,8 +2440,9 @@ export default function Editor() {
         />
 
         <ExportReportModal
-          editorId={projectId ?? ""}
+          editorId={projectId || ""}
           open={showReportModal}
+          projectName={projectMetadata?.name || "Untitled Project"}
           onClose={() => setShowReportModal(false)}
         />
 

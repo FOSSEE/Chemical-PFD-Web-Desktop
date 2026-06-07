@@ -11,7 +11,7 @@ import { Rect } from "react-konva";
 
 import { calculateAspectFit } from "../../utils/layout";
 
-import { CanvasItemImageProps } from "./types";
+import { CanvasItem, CanvasItemImageProps } from "./types";
 
 const LABEL_OFFSET = 4;
 
@@ -128,7 +128,6 @@ export const CanvasItemImage = ({
         x={labelX + item.width / 2}
         y={labelY + 2}
       />
-
 
 
       {/* ================= GRIPS (Always On Top) ================= */}

@@ -83,7 +83,7 @@ class ComponentWidget(QWidget):
     def calculate_svg_rect(self, content_rect):
         """
         Calculate the actual rectangle where SVG will be rendered.
-        Updated to preserve aspect ratio instead of stretching.
+        Updated to allow independent stretching.
         """
         default_size = self.renderer.defaultSize()
         svg_w = default_size.width()
@@ -94,10 +94,9 @@ class ComponentWidget(QWidget):
             
         scale_w = content_rect.width() / svg_w
         scale_h = content_rect.height() / svg_h
-        scale = min(scale_w, scale_h)
         
-        new_w = svg_w * scale
-        new_h = svg_h * scale
+        new_w = svg_w * scale_w
+        new_h = svg_h * scale_h
         
         x = content_rect.x() + (content_rect.width() - new_w) / 2.0
         y = content_rect.y() + (content_rect.height() - new_h) / 2.0
@@ -340,15 +339,22 @@ class ComponentWidget(QWidget):
         painter.drawEllipse(center, scaled_radius, scaled_radius)
 
     def draw_resize_handles(self, painter, svg_rect):
-        """Draw resize handles at component corners"""
+        """Draw resize handles at component corners and mid-points"""
         s = self.RESIZE_HANDLE_SIZE
         handle_color = QColor("#60a5fa")  # Light blue
+        
+        cx = svg_rect.center().x()
+        cy = svg_rect.center().y()
         
         handles = {
             "tl": (svg_rect.left() - s/2, svg_rect.top() - s/2),
             "tr": (svg_rect.right() - s/2, svg_rect.top() - s/2),
             "bl": (svg_rect.left() - s/2, svg_rect.bottom() - s/2),
             "br": (svg_rect.right() - s/2, svg_rect.bottom() - s/2),
+            "t": (cx - s/2, svg_rect.top() - s/2),
+            "b": (cx - s/2, svg_rect.bottom() - s/2),
+            "l": (svg_rect.left() - s/2, cy - s/2),
+            "r": (svg_rect.right() - s/2, cy - s/2),
         }
         
         painter.setBrush(handle_color)
@@ -380,7 +386,7 @@ class ComponentWidget(QWidget):
         """
         Get grip position in LOGICAL coordinates (unscaled).
         
-        Crucial: This must match the visual centering logic in calculate_svg_rect
+        Crucial: This must match the logic in calculate_svg_rect
         so that connections actually touch the SVG image, not just the bounding box.
         """
         grips = self.get_grips()
@@ -391,17 +397,16 @@ class ComponentWidget(QWidget):
             l_w = self.logical_rect.width()
             l_h = self.logical_rect.height()
             
-            # 2. Calculate logic aspect ratio centering (matching calculate_svg_rect logic)
+            # 2. Calculate logic stretching (matching calculate_svg_rect logic)
             default_size = self.renderer.defaultSize()
             svg_w, svg_h = default_size.width(), default_size.height()
             
             if svg_w > 0 and svg_h > 0:
                 scale_w = l_w / svg_w
                 scale_h = l_h / svg_h
-                scale = min(scale_w, scale_h)
                 
-                new_w = svg_w * scale
-                new_h = svg_h * scale
+                new_w = svg_w * scale_w
+                new_h = svg_h * scale_h
                 
                 # Offsets within the logical_rect
                 off_x = (l_w - new_w) / 2.0
@@ -429,11 +434,14 @@ class ComponentWidget(QWidget):
     def get_resize_handle_rect(self, handle):
         """
         Get the screen rectangle for a resize handle.
-        handle: "tl", "tr", "bl", "br"
+        handle: "tl", "tr", "bl", "br", "t", "b", "l", "r"
         """
         s = self.RESIZE_HANDLE_SIZE
         content_rect = self.get_content_rect()
         svg_rect = self.calculate_svg_rect(content_rect)
+        
+        cx = svg_rect.center().x()
+        cy = svg_rect.center().y()
         
         if handle == "tl":
             return QRectF(svg_rect.left() - s/2, svg_rect.top() - s/2, s, s)
@@ -443,14 +451,22 @@ class ComponentWidget(QWidget):
             return QRectF(svg_rect.left() - s/2, svg_rect.bottom() - s/2, s, s)
         elif handle == "br":
             return QRectF(svg_rect.right() - s/2, svg_rect.bottom() - s/2, s, s)
+        elif handle == "t":
+            return QRectF(cx - s/2, svg_rect.top() - s/2, s, s)
+        elif handle == "b":
+            return QRectF(cx - s/2, svg_rect.bottom() - s/2, s, s)
+        elif handle == "l":
+            return QRectF(svg_rect.left() - s/2, cy - s/2, s, s)
+        elif handle == "r":
+            return QRectF(svg_rect.right() - s/2, cy - s/2, s, s)
         return QRectF()
     
     def get_resize_handle_at(self, pos):
         """
         Check if the given position is over a resize handle.
-        Returns: "tl", "tr", "bl", "br", or None
+        Returns: "tl", "tr", "bl", "br", "t", "b", "l", "r" or None
         """
-        for handle in ["tl", "tr", "bl", "br"]:
+        for handle in ["tl", "tr", "bl", "br", "t", "b", "l", "r"]:
             if self.get_resize_handle_rect(handle).contains(QPointF(pos)):
                 return handle
         return None
@@ -540,7 +556,6 @@ class ComponentWidget(QWidget):
                 old_rect = self.resize_start_rect
                 new_rect = QRectF(old_rect)
                 
-                # Keep ratio like web transformer: vertical-only drags also resize width.
                 min_size = 10.0
                 old_w = max(old_rect.width(), 1.0)
                 old_h = max(old_rect.height(), 1.0)
@@ -551,6 +566,10 @@ class ComponentWidget(QWidget):
                     "bl": (-1.0, 1.0),
                     "tr": (1.0, -1.0),
                     "tl": (-1.0, -1.0),
+                    "r":  (1.0, 0.0),
+                    "l":  (-1.0, 0.0),
+                    "b":  (0.0, 1.0),
+                    "t":  (0.0, -1.0),
                 }
                 sx, sy = signs[self.resize_handle]
 
@@ -559,30 +578,36 @@ class ComponentWidget(QWidget):
                 dw = raw_w - old_w
                 dh = raw_h - old_h
 
-                width_driver = abs(dw) / old_w >= abs(dh) / old_h
-                if width_driver:
-                    new_w = max(min_size, raw_w)
-                    new_h = max(min_size, new_w / aspect)
+                if self.resize_handle in ["tl", "tr", "bl", "br"]:
+                    # Keep ratio like web transformer for corners
+                    width_driver = abs(dw) / old_w >= abs(dh) / old_h
+                    if width_driver:
+                        new_w = max(min_size, raw_w)
+                        new_h = max(min_size, new_w / aspect)
+                    else:
+                        new_h = max(min_size, raw_h)
+                        new_w = max(min_size, new_h * aspect)
                 else:
-                    new_h = max(min_size, raw_h)
-                    new_w = max(min_size, new_h * aspect)
+                    # Independent stretch for mid-points
+                    new_w = max(min_size, raw_w) if sx != 0 else old_w
+                    new_h = max(min_size, raw_h) if sy != 0 else old_h
 
                 old_left = old_rect.left()
                 old_top = old_rect.top()
                 old_right = old_rect.right()
                 old_bottom = old_rect.bottom()
+                
+                new_left = old_left
+                new_top = old_top
 
-                if self.resize_handle == "br":
+                if "r" in self.resize_handle:
                     new_left = old_left
-                    new_top = old_top
-                elif self.resize_handle == "bl":
+                elif "l" in self.resize_handle:
                     new_left = old_right - new_w
+                
+                if "b" in self.resize_handle:
                     new_top = old_top
-                elif self.resize_handle == "tr":
-                    new_left = old_left
-                    new_top = old_bottom - new_h
-                else:  # "tl"
-                    new_left = old_right - new_w
+                elif "t" in self.resize_handle:
                     new_top = old_bottom - new_h
 
                 new_rect = QRectF(new_left, new_top, new_w, new_h)
@@ -619,6 +644,10 @@ class ComponentWidget(QWidget):
                     self.setCursor(Qt.SizeFDiagCursor)
                 elif handle in ["tr", "bl"]:
                     self.setCursor(Qt.SizeBDiagCursor)
+                elif handle in ["t", "b"]:
+                    self.setCursor(Qt.SizeVerCursor)
+                elif handle in ["l", "r"]:
+                    self.setCursor(Qt.SizeHorCursor)
             else:
                 self.setCursor(Qt.ArrowCursor)
 
