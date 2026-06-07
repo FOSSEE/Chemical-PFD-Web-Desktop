@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import {
   Image as KonvaImage,
-  Transformer,
   Circle,
   Group,
   Text,
@@ -23,7 +22,6 @@ export const CanvasItemImage = ({
   onSelect,
   onChange,
   onDragEnd,
-  onTransformEnd,
   onGripMouseDown,
   onGripMouseEnter,
   onGripMouseLeave,
@@ -33,14 +31,7 @@ export const CanvasItemImage = ({
   const [image] = useImage(item.svg || item.icon, "anonymous");
 
   const groupRef = useRef<Konva.Group>(null);
-  const trRef = useRef<Konva.Transformer>(null);
 
-  useEffect(() => {
-    if (isSelected && trRef.current && groupRef.current) {
-      trRef.current.nodes([groupRef.current]);
-      trRef.current.getLayer()?.batchDraw();
-    }
-  }, [isSelected, item.width, item.height, item.x, item.y, item.rotation]);
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     const updatedItem = {
@@ -53,29 +44,7 @@ export const CanvasItemImage = ({
     onDragEnd?.(updatedItem);
   };
 
-  const handleTransformEnd = () => {
-    const node = groupRef.current;
 
-    if (!node) return;
-
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
-
-    node.scaleX(1);
-    node.scaleY(1);
-
-    const updatedItem = {
-      ...item,
-      x: node.x(),
-      y: node.y(),
-      width: Math.max(5, item.width * Math.abs(scaleX)),
-      height: Math.max(5, item.height * Math.abs(scaleY)),
-      rotation: node.rotation(),
-    };
-
-    onChange(updatedItem);
-    onTransformEnd?.(updatedItem);
-  };
 
   const labelText = item.label || item.name;
 
@@ -124,7 +93,6 @@ export const CanvasItemImage = ({
         x={item.x}
         y={item.y}
         onDragEnd={handleDragEnd}
-        onTransformEnd={handleTransformEnd}
       >
         {isInvalid && (
           <Rect
@@ -161,29 +129,7 @@ export const CanvasItemImage = ({
         y={labelY + 2}
       />
 
-      {/* ================= TRANSFORMER ================= */}
-      {isSelected && (
-        <Transformer
-          ref={trRef}
-          boundBoxFunc={(oldBox, newBox) => {
-            // Prevent shrinking too small
-            if (newBox.width < 10 || newBox.height < 10) {
-              return oldBox;
-            }
 
-            return newBox;
-          }}
-          enabledAnchors={[
-            "top-left",
-            "top-right",
-            "bottom-left",
-            "bottom-right",
-          ]}
-          flipEnabled={false} // Disable flipping to prevent negative scale issues
-          keepRatio={true} // Enforce aspect ratio scaling
-          rotateEnabled={false} // Disable rotation
-        />
-      )}
 
       {/* ================= GRIPS (Always On Top) ================= */}
       {(isSelected || isDrawingConnection) &&
