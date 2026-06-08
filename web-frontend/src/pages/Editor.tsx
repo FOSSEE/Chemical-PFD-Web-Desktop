@@ -30,6 +30,7 @@ import { buildGraph } from "../utils/graph/buildGraph";
 import { validateGraph } from "../utils/graph/validateGraph";
 
 import { CanvasItemImage } from "@/components/Canvas/CanvasItemImage";
+import { ResizableWrapper } from "@/components/Canvas/ResizableWrapper";
 import {
   CanvasPropertiesSidebar,
   ComponentLibrarySidebar,
@@ -272,6 +273,21 @@ export default function Editor() {
 
     return editorStore.getItemsInOrder(projectId);
   }, [projectId, editorStore, currentState?.items]);
+
+  const [resizingItem, setResizingItem] = useState<{
+    id: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const displayItems = useMemo(() => {
+    if (!resizingItem) return droppedItems;
+    return droppedItems.map((item) =>
+      item.id === resizingItem.id ? { ...item, ...resizingItem } : item
+    );
+  }, [droppedItems, resizingItem]);
 
   const connections = useMemo(() => {
     return currentState?.connections || [];
@@ -981,12 +997,12 @@ export default function Editor() {
     () =>
       calculateManualPathsWithBridges(
         connections,
-        droppedItems,
+        displayItems,
         2000,
         1500,
         true,
       ),
-    [connections, droppedItems],
+    [connections, displayItems],
   );
 
   const handleCancelDrawing = () => {
@@ -1982,7 +1998,7 @@ editorStore.updateItem(
                     key={connection.id}
                     arrowAngle={connectionPaths[connection.id]?.arrowAngle}
                     isSelected={selectedConnectionIds.has(connection.id)}
-                    items={droppedItems}
+                    items={displayItems}
                     pathData={connectionPaths[connection.id]?.pathData}
                     segments={connectionPaths[connection.id]?.segments}
                     targetPosition={connectionPaths[connection.id]?.endPoint}
@@ -2036,9 +2052,8 @@ editorStore.updateItem(
                         y: snap(p.y),
                       }));
 
-                      // Get padded obstacles for drag check
                       const obstacles = getPaddedObstacleRects(
-                        droppedItems,
+                        displayItems,
                         20,
                       );
 
@@ -2109,7 +2124,7 @@ editorStore.updateItem(
               )}
 
               {/* Render Components */}
-              {droppedItems.map((item: CanvasItem) => {
+              {displayItems.map((item: CanvasItem) => {
                 const isInvalid =
                   validationResult &&
                   (validationResult.isolated.includes(item.id) ||
@@ -2138,6 +2153,37 @@ editorStore.updateItem(
               })}
             </Layer>
           </Stage>
+
+          {/* HTML Overlay for Resizing Selected Item */}
+          {selectedItemIds.size === 1 && (() => {
+            const activeId = Array.from(selectedItemIds)[0];
+            const item = droppedItems.find((it) => it.id === activeId);
+            if (!item) return null;
+
+            const currentBounds = resizingItem && resizingItem.id === item.id ? resizingItem : item;
+
+            return (
+              <ResizableWrapper
+                item={item}
+                bounds={currentBounds}
+                stageScale={stageScale}
+                stagePos={stagePos}
+                otherItems={droppedItems}
+                onResizeMove={(newBounds) => {
+                  setResizingItem({
+                    id: item.id,
+                    ...newBounds,
+                  });
+                }}
+                onResizeEnd={(finalBounds) => {
+                  if (projectId) {
+                    editorStore.updateItem(projectId, item.id, finalBounds);
+                  }
+                  setResizingItem(null);
+                }}
+              />
+            );
+          })()}
 
           {/* Floating Info Bubble */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none">
@@ -2560,7 +2606,7 @@ editorStore.updateItem(
 
                       if (!searchText) continue;
 
-                      const match = matchComponent(searchText, allComps as any);
+                      const match = matchComponent(searchText, allComps as any) as any;
 
                       if (!match) {
                         console.warn("❌ No match:", aiComp);
@@ -2583,7 +2629,7 @@ editorStore.updateItem(
 
                       if (!searchText) return;
 
-                      const match = matchComponent(searchText, allComps as any);
+                      const match = matchComponent(searchText, allComps as any) as any;
                       if (!match) return; // Already validated
 
                       // Use AI provided coordinates, or fallback
