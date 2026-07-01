@@ -43,9 +43,7 @@ export const CanvasItemImage = ({
     onChange(updatedItem);
     onDragEnd?.(updatedItem);
   };
-
-
-
+  
   const labelText = item.label || item.name;
 
   const labelX = item.x;
@@ -104,11 +102,11 @@ export const CanvasItemImage = ({
           />
         )}
         <KonvaImage
-          height={renderHeight}
           image={image || undefined}
-          width={renderWidth}
-          x={renderX}
-          y={renderY}
+          height={item.height}
+          width={item.width}
+          x={0}
+          y={0}
           onClick={(e) => onSelect(e as any)}
           onTap={(e) => onSelect(e as any)}
         />
